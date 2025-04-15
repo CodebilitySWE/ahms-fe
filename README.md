@@ -10,3 +10,12 @@ Currently, two official plugins are available:
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript and enable type-aware lint rules. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## Installation
+
+1. Clone the repository
+2. install yarn globally on you pc with `npm install -g yarn`
+3. install node modules strictly with `yarn add` or `yarn install` anyone that works
+4. run the application with `yarn dev` or `yarn run`
+
+## Good luck Team Codebility -------> JOE
