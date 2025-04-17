@@ -18,4 +18,7 @@ If you are developing a production application, we recommend using TypeScript an
 3. install node modules strictly with `yarn add` or `yarn install` anyone that works
 4. run the application with `yarn dev` or `yarn run`
 
+## Things needed in .env
+- `BASE_API_URL=https://ahms-be.onrender.com/`
+
 ## Good luck Team Codebility -------> JOE
