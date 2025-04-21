@@ -49,7 +49,7 @@ const LoginPage = () => {
         </IconButton>
 
         <Typography variant="h4" align="center" gutterBottom>
-          Akuafo Hall CMS
+          Akuafo Hall CM
         </Typography>
         
         <Typography 
