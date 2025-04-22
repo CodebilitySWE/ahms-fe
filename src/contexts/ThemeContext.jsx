@@ -2,6 +2,16 @@ import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { ThemeProvider as MUIThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
 
+// Green color palette from the design
+const greenPalette = {
+  darkGreen: '#055519',      // 13%
+  mediumDarkGreen: '#24873D', // 28%
+  mediumGreen: '#2DA94B',    // 39%
+  green: '#2B8C43',          // 50%
+  lightGreen: '#2BA148',     // 54%, 68%
+  lightestGreen: '#1C7B34'   // 75%
+};
+
 // Create context
 const ThemeContext = createContext({
   mode: 'light',
@@ -13,15 +23,24 @@ export const useThemeContext = () => useContext(ThemeContext);
 
 // Theme provider component
 export const ThemeProvider = ({ children }) => {
-  // Use localStorage to store theme preference
+  // Use localStorage to store theme preference with fallback
   const [mode, setMode] = useState(() => {
-    const savedMode = localStorage.getItem('themeMode');
-    return savedMode || 'light'; // Default to light theme
+    try {
+      const savedMode = localStorage.getItem('themeMode');
+      return savedMode ? savedMode : 'light'; // Default to light theme
+    } catch (error) {
+      console.error('Error accessing localStorage:', error);
+      return 'light';
+    }
   });
 
   // Update localStorage when theme changes
   useEffect(() => {
-    localStorage.setItem('themeMode', mode);
+    try {
+      localStorage.setItem('themeMode', mode);
+    } catch (error) {
+      console.error('Error updating localStorage:', error);
+    }
   }, [mode]);
 
   // Toggle theme function
@@ -29,30 +48,36 @@ export const ThemeProvider = ({ children }) => {
     setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
   };
 
+  // Create theme based on current mode
   const theme = useMemo(
     () =>
       createTheme({
         palette: {
           mode,
           primary: {
-            main: '#1976d2', // Customize this to match Akuafo Hall's colors
-            light: '#42a5f5',
-            dark: '#1565c0',
+            main: greenPalette.mediumGreen, // From the design
+            light: greenPalette.lightGreen,
+            dark: greenPalette.darkGreen,
+            contrastText: '#ffffff',
           },
           secondary: {
-            main: '#9c27b0',
-            light: '#ba68c8',
-            dark: '#7b1fa2',
+            main: mode === 'light' ? '#424242' : '#9e9e9e',
+            light: mode === 'light' ? '#6d6d6d' : '#cfcfcf',
+            dark: mode === 'light' ? '#1b1b1b' : '#707070',
           },
           background: {
-            default: mode === 'light' ? '#f5f5f5' : '#121212',
+            default: mode === 'light' ? '#e5e5e5' : '#121212', // Light gray background from image
             paper: mode === 'light' ? '#ffffff' : '#1e1e1e',
+          },
+          text: {
+            primary: mode === 'light' ? '#333333' : '#f5f5f5',
+            secondary: mode === 'light' ? '#666666' : '#aaaaaa',
           },
         },
         typography: {
           fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-          h4: {
-            fontWeight: 600,
+          h2: {
+            fontWeight: 700,
           },
           h6: {
             fontWeight: 500,
@@ -63,14 +88,46 @@ export const ThemeProvider = ({ children }) => {
             styleOverrides: {
               root: {
                 textTransform: 'none',
-                borderRadius: 8,
+                borderRadius: '4px',
+              },
+              containedPrimary: {
+                backgroundColor: greenPalette.mediumGreen,
+                '&:hover': {
+                  backgroundColor: greenPalette.darkGreen,
+                },
+              },
+            },
+          },
+          MuiTextField: {
+            styleOverrides: {
+              root: {
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: '4px',
+                },
+              },
+            },
+          },
+          MuiRadio: {
+            styleOverrides: {
+              root: {
+                color: mode === 'light' ? 'rgba(0,0,0,0.54)' : 'rgba(255,255,255,0.7)',
+                '&.Mui-checked': {
+                  color: greenPalette.mediumGreen,
+                },
+              },
+            },
+          },
+          MuiInputBase: {
+            styleOverrides: {
+              root: {
+                borderRadius: '4px',
               },
             },
           },
           MuiPaper: {
             styleOverrides: {
               root: {
-                borderRadius: 8,
+                borderRadius: '4px',
               },
             },
           },
