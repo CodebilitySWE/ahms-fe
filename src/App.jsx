@@ -8,6 +8,7 @@ import ArtisanRoutes from './routes/artisanRoutes';
 import AdminRoutes from './routes/adminRoutes';
 import LoginPage from './pages/auth/LoginPage';
 import { setupAuthInterceptors } from './utils/authUtils';
+import SignupPage from './pages/auth/SignupPage';
 
 const NotFoundPage = () => <div>Page not found</div>;
 const UnauthorizedPage = () => <div>Unauthorized access</div>;
@@ -31,6 +32,7 @@ function App() {
             {/* Special routes */}
             <Route path="/unauthorized" element={<UnauthorizedPage />} />
             <Route path="/" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </AuthProvider>
