@@ -1,18 +1,25 @@
 import { Box } from "@mui/material";
+import {useEffect} from "react";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
+import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
+import { useThemeContext } from "../../contexts/ThemeContext"; 
 
 const AcmsIcon = () => {
+    const { mode, toggleTheme } = useThemeContext(); 
+    
   return (
     <Box //grey box
       sx={{
         height: 250,
-        bgcolor: "#d0d0d0",
+        bgcolor: mode === 'dark' ? '#1e1e1e' : '#d0d0d0',  
         borderRadius: 8,
         zIndex: 1,
         position: "relative",
-        marginTop: 2,
-        marginLeft: 2,
-        marginRight: 2,
+        width: "100%", 
+        px: { xs: 0, sm: 1 },
+        top: -40,
+        marginX: "auto",
+        maxWidth: 1200,
       }}
     >
 
@@ -38,10 +45,22 @@ const AcmsIcon = () => {
             boxShadow: 1,
           }}
         >
-            
+
           ACMS
         </Box>
-        <DarkModeOutlinedIcon sx={{ color: "#333", cursor: "pointer" }} />
+        
+        <Box
+          sx={{
+            cursor: "pointer",
+          }}
+          onClick={toggleTheme} 
+        >
+          {mode === 'light' ? (
+            <DarkModeOutlinedIcon sx={{ color: "#333" }} />
+          ) : (
+            <LightModeOutlinedIcon sx={{ color: "#fff" }} />
+          )}
+        </Box>
       </Box>
     </Box>
   );
