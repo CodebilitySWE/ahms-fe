@@ -22,7 +22,6 @@ import { useThemeContext } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { loginUser } from '../../utils/authUtils';
 
-// Green color palette from the design
 const greenPalette = {
   darkGreen: '#055519',  // 13%
   mediumDarkGreen: '#24873D', // 28%

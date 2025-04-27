@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-// Use a hardcoded API URL instead of process.env
-const API_BASE_URL = 'https://ahms-be.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ahms-be.onrender.com';
 
 /**
  * Authenticates a user with the backend API
@@ -42,6 +41,54 @@ export const loginUser = async (credentials) => {
       throw new Error('No response from server. Please check your connection.');
     } else {
       // Something happened in setting up the request that triggered an Error
+      throw error;
+    }
+  }
+};
+
+/**
+ * Registers a new student
+ * @param {Object} userData - User registration data
+ * @param {File} photoFile - User profile photo
+ * @returns {Promise<Object>} User data on successful registration
+ * @throws {Error} If registration fails
+ */
+export const registerUser = async (userData, photoFile) => {
+  try {
+    const formData = new FormData();
+    
+    // Add user data to form data
+    Object.keys(userData).forEach(key => {
+      formData.append(key, userData[key]);
+    });
+    
+    // Add photo if available
+    if (photoFile) {
+      formData.append('profile_picture', photoFile);
+    }
+    
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_BASE_URL}/api/auth/signup`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    
+    // Store JWT token in localStorage for subsequent API calls
+    if (response.data.token) {
+      localStorage.setItem('authToken', response.data.token);
+    }
+    
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(error.response.data.message || 'Registration failed');
+    } else if (error.request) {
+      throw new Error('No response from server. Please check your connection.');
+    } else {
       throw error;
     }
   }
