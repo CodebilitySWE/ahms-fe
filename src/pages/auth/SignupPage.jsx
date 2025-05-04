@@ -206,7 +206,7 @@ const SignupPage = () => {
         </IconButton>
       </Box>
 
-      {/* Card Container */}
+      {/* Card Container*/} 
       <Paper
         elevation={4}
         sx={{
@@ -217,7 +217,7 @@ const SignupPage = () => {
           my: 2
         }}
       >
-        {/* Green Header */}
+        {/* Green Header*/} 
         <Box
           sx={{
             width: "100%",
@@ -235,7 +235,7 @@ const SignupPage = () => {
           </Typography>
         </Box>
 
-        {/* Form */}
+        {/* Form*/} 
         <Box
           component="form"
           onSubmit={handleSubmit}
@@ -258,7 +258,7 @@ const SignupPage = () => {
               {error}
             </Box>
           )}
-          {/* Form Fields */}
+          {/* Form Fields*/} 
           <TextField
             name="name"
             placeholder="Name"
@@ -376,7 +376,7 @@ const SignupPage = () => {
             }}
           />
           
-          {/* Block as a dropdown */}
+          {/* Block as a dropdown*/} 
           <FormControl 
             fullWidth 
             variant="standard" 
