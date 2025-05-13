@@ -1,14 +1,14 @@
 import { Route } from 'react-router-dom';
-// import Dashboard from '../pages/admin/Dashboard';
+import Dashboard from '../pages/admin/Dashboard';
 import ProtectedRoute from './ProtectedRoutes';
 
 const AdminRoutes = () => [
   <Route 
     key="admin-dashboard" 
-    path="/admin" 
+    path="/admin/dashboard" 
     element={
       <ProtectedRoute allowedRoles={['admin']}>
-        {/* <Dashboard /> */}
+        <Dashboard />
       </ProtectedRoute>
     } 
   />

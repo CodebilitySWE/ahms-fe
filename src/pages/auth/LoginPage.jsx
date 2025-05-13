@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import {
   Box,
   Button,
@@ -11,8 +14,8 @@ import {
   InputAdornment,
   IconButton,
   Link,
-  CircularProgress,
-  useMediaQuery
+  useMediaQuery,
+  Alert
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -21,15 +24,15 @@ import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
 import { useThemeContext } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { loginUser } from '../../utils/authUtils';
+import LoaderComponent from '../../components/loaders/AdvancedLoaders'; 
 
-// Green color palette from the design
 const greenPalette = {
-  darkGreen: '#055519',  // 13%
-  mediumDarkGreen: '#24873D', // 28%
-  mediumGreen: '#2DA94B', // 39%
-  green: '#2B8C43', // 50%
-  lightGreen: '#2BA148', // 54%, 68%
-  lightestGreen: '#1C7B34' // 75%
+  darkGreen: '#055519',
+  mediumDarkGreen: '#24873D',
+  mediumGreen: '#2DA94B',
+  green: '#2B8C43',
+  lightGreen: '#2BA148',
+  lightestGreen: '#1C7B34'
 };
 
 const LoginPage = () => {
@@ -50,8 +53,9 @@ const LoginPage = () => {
   }
   
   const { mode, toggleTheme } = themeContext;
-  const { login } = authContext;
+  const { login, user, loading: authLoading } = authContext;
   const isMobile = useMediaQuery('(max-width:768px)');
+  const navigate = useNavigate();
   
   const [credentials, setCredentials] = useState({
     email: '',
@@ -68,12 +72,29 @@ const LoginPage = () => {
     document.body.style.backgroundColor = mode === 'dark' ? '#121212' : '#ffffff';
   }, [mode]);
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (user && !authLoading) {
+      if (user.role === 'admin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (user.role === 'artisan') {
+        navigate('/artisan/dashboard', { replace: true });
+      } else if (user.role === 'student') {
+        navigate('/student/dashboard', { replace: true });
+      }
+    }
+  }, [user, authLoading, navigate]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setCredentials({
       ...credentials,
       [name]: value
     });
+    // Clear error when user starts typing
+    if (error) {
+      setError('');
+    }
   };
 
   const handleTogglePasswordVisibility = () => {
@@ -87,16 +108,80 @@ const LoginPage = () => {
     
     try {
       const result = await loginUser(credentials);
+      
+      // Check for role mismatch
+      const backendRole = (result.user?.role || '').toLowerCase();
+      const selectedRole = (credentials.role || '').toLowerCase();
+      
+      if (backendRole && backendRole !== selectedRole) {
+        const errorMessage = `Role mismatch: You tried to log in as ${selectedRole}, but your account is ${backendRole}.`;
+        setError(errorMessage);
+        toast.error(errorMessage, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        setLoading(false);
+        return;
+      }
+      
+      // Successful login
+      toast.success('Login successful!', {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+      
       login({
-        ...credentials,
-        ...result
+        ...result.user,
+        token: result.token,
+        role: backendRole
       });
     } catch (err) {
-      setError(err.message || 'Login failed. Please check your credentials.');
+      const errorMessage = err.message || 'Login failed. Please check your credentials.';
+      setError(errorMessage);
+      toast.error(errorMessage, {
+        position: "top-right",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setLoading(false);
     }
   };
+
+  // Show advanced loader during auth check or login process
+  if (authLoading) {
+    return (
+      <LoaderComponent
+        isLoading={true}
+        loadingText="Checking authentication"
+        primaryColor={greenPalette.mediumGreen}
+        secondaryColor={greenPalette.lightGreen}
+      />
+    );
+  }
+
+  // Show loader during login
+  if (loading) {
+    return (
+      <LoaderComponent
+        isLoading={true}
+        loadingText="Signing In"
+        primaryColor={greenPalette.mediumGreen}
+        secondaryColor={greenPalette.lightGreen}
+      />
+    );
+  }
 
   return (
     <Box
@@ -110,6 +195,19 @@ const LoginPage = () => {
         color: mode === 'dark' ? '#ffffff' : '#000000',
       }}
     >
+      <ToastContainer 
+        position="top-right" 
+        autoClose={5000} 
+        hideProgressBar={false} 
+        newestOnTop 
+        closeOnClick 
+        rtl={false}
+        pauseOnFocusLoss 
+        draggable 
+        pauseOnHover
+        theme={mode === 'dark' ? 'dark' : 'light'}
+      />
+      
       {/* Gray rectangle at the top */}
       <Box
         sx={{
@@ -276,9 +374,9 @@ const LoginPage = () => {
             </Typography>
             
             {error && (
-              <Typography color="error" variant="body2" align="center" sx={{ mb: 2 }}>
+              <Alert severity="error" sx={{ mb: 2, width: '100%', maxWidth: '300px' }}>
                 {error}
-              </Typography>
+              </Alert>
             )}
             
             <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '300px' }}>
@@ -461,7 +559,7 @@ const LoginPage = () => {
                   boxShadow: 'none'
                 }}
               >
-                {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+                Sign In
               </Button>
               
               {/* No Account text */}

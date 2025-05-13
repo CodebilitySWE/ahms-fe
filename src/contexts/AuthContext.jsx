@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isAuthenticated, logoutUser } from '../utils/authUtils';
 
-// Create the auth context
 const AuthContext = createContext({
   user: null,
   login: () => {},
@@ -17,53 +16,83 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Check for existing user session on mount
   useEffect(() => {
-    const initAuth = () => {
+    const initAuth = async () => {
       try {
-        // Check if user is already authenticated
         if (isAuthenticated()) {
-          // Try to get user data from localStorage
           const userData = localStorage.getItem('userData');
-          if (userData) {
-            setUser(JSON.parse(userData));
+          const authToken = localStorage.getItem('authToken');
+          
+          if (userData && authToken) {
+            const parsedUser = JSON.parse(userData);
+            
+            try {
+              // const response = await axios.get('/api/auth/verify', {
+              //   headers: { Authorization: `Bearer ${authToken}` }
+              // });
+              
+              setUser(parsedUser);
+              
+              const currentPath = window.location.pathname;
+              if (currentPath === '/login' || currentPath === '/') {
+                if (parsedUser.role === 'admin') {
+                  navigate('/admin/dashboard', { replace: true });
+                } else if (parsedUser.role === 'artisan') {
+                  navigate('/artisan/dashboard', { replace: true });
+                } else if (parsedUser.role === 'student') {
+                  navigate('/student/dashboard', { replace: true });
+                }
+              }
+            } catch (tokenError) {
+              console.error('Token validation error:', tokenError);
+              logoutUser();
+              setUser(null);
+            }
           } else {
-            // If no user data, force re-login
             logoutUser();
+            setUser(null);
           }
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
         logoutUser();
+        setUser(null);
       } finally {
         setLoading(false);
       }
     };
 
     initAuth();
-  }, []);
+  }, [navigate]);
 
-  // Login function
   const login = (userData) => {
-    // Save user data to local storage
-    localStorage.setItem('userData', JSON.stringify(userData));
-    setUser(userData);
+    try {
+      localStorage.setItem('userData', JSON.stringify(userData));
+      setUser(userData);
 
-    // Redirect based on role
-    if (userData.role === 'admin') {
-      navigate('/admin');
-    } else if (userData.role === 'artisan') {
-      navigate('/artisan');
-    } else {
-      navigate('/student');
+      if (userData.role === 'admin') {
+        navigate('/admin/dashboard', { replace: true });
+      } else if (userData.role === 'artisan') {
+        navigate('/artisan/dashboard', { replace: true });
+      } else if (userData.role === 'student') {
+        navigate('/student/dashboard', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
     }
   };
 
   // Logout function
   const logout = () => {
-    logoutUser();
-    setUser(null);
-    navigate('/login');
+    try {
+      logoutUser();
+      setUser(null);
+      navigate('/login', { replace: true });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const contextValue = {
