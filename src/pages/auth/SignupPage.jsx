@@ -25,6 +25,7 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { registerUser } from '../../utils/authUtils';
+import Sidebar from '../../components/Reusable/Sidebar'
 
 const greenPalette = {
   main: '#2DA94B', 
