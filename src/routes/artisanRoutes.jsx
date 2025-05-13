@@ -1,14 +1,14 @@
 import { Route } from 'react-router-dom';
-// import Dashboard from '../pages/artisans/Dashboard';
+import Dashboard from '../pages/artisans/Dashboard';
 import ProtectedRoute from './ProtectedRoutes';
 
 const ArtisanRoutes = () => [
   <Route 
     key="artisan-dashboard" 
-    path="/artisan" 
+    path="/artisan/dashboard" 
     element={
       <ProtectedRoute allowedRoles={['artisan']}>
-        {/* <Dashboard /> */}
+        <Dashboard />
       </ProtectedRoute>
     } 
   />
