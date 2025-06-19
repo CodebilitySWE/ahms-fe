@@ -36,25 +36,17 @@ const Notification = () => {
   };
 
   return (
-    <Box
-      sx={{
-        width: "100%",
-        minHeight: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        backgroundColor: "white",
-      }}
-    >
+    
       <Box
         sx={{
-          width: 364,
-          minHeight: 500,
+          width: 285,
+          minHeight: 550,
           border: 1,
           borderRadius: 4,
           padding: 2,
-          boxShadow: "0px 8px 24px rgba(0, 0, 0, 0.2)",
-          borderColor: "white",
+          boxShadow: "0px 2px 3px rgba(0, 0, 0, 0.2)",
+          borderColor: "#F5F5F5",
+          backgroundColor:"white"
         }}
       >
         <Typography
@@ -142,7 +134,6 @@ const Notification = () => {
           ))
         )}
       </Box>
-    </Box>
   );
 };
 

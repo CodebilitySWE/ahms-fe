@@ -1,6 +1,7 @@
 import React from 'react';
 import NavBar from '../../components/Reusable/NavBar';
 import Sidebar from '../../components/Reusable/Sidebar';
+import Notification from '../../components/Reusable/Notification'; 
 import Box from '@mui/material/Box';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PeopleIcon from '@mui/icons-material/People';
@@ -22,11 +23,20 @@ const Dashboard = () => {
   return (
     <Box display="flex" minHeight="100vh">
       <Sidebar role="admin" />
+
       <Box flex={1} display="flex" flexDirection="column" sx={{ minWidth: 0 }}>
         <NavBar userType="admin" pageTitle="Dashboard" />
+
+        <Box display="flex" flexDirection="row" p={3} gap={3}>
+          <Box flex={3}>
+          </Box>
+          <Box flex={1}>
+            <Notification />
+          </Box>
+        </Box>
       </Box>
     </Box>
   );
 };
 
-export default Dashboard; 
+export default Dashboard;
