@@ -526,7 +526,7 @@ const LoginPage = () => {
                 }}
                 InputProps={{
                   endAdornment: (
-                    <InputAdornment position="end">
+                    <InputAdornment position="end">\
                       <IconButton 
                         onClick={handleTogglePasswordVisibility} 
                         edge="end"
