@@ -20,6 +20,8 @@ import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined
 import PersonIcon from "@mui/icons-material/Person";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import logo from "../../assets/logo.png";
+import { useNavigate } from 'react-router-dom';
+ 
 
 
 const sidebarComponents = {//sidebar components based on user
@@ -40,7 +42,8 @@ const sidebarComponents = {//sidebar components based on user
   ],
   admin: [
     {name: "Dashboard", icon: <DashboardIcon />},
-    {name: "Manage Users", icon: <GroupIcon />},
+    {name: "Manage Users", icon: <GroupIcon />, route:"/admin/manage-users"
+ },
     {name: "Complaints", icon: <ReportIcon />},
     {name: "Notifications", icon: <NotificationsOutlinedIcon />},
     {name: "Profile", icon: <PersonIcon />},
@@ -53,11 +56,16 @@ const Sidebar = ({ role = "admin" }) => {//behaviour on mobile
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const items = sidebarComponents[role] || [];
+  const navigate =useNavigate();
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
 };
-
+  const handleItemClick = (route) => {
+    if (route) {
+      navigate(route);
+}
+  }
   const drawerContent =(
     <Box display = "flex" flexDirection = "column" height = "100%" p ={2}>
       <Box display="flex" alignItems="center" gap={1} mb={4} mt={2}>
@@ -69,8 +77,8 @@ const Sidebar = ({ role = "admin" }) => {//behaviour on mobile
       <Box height={2} bgcolor="#00b0ff" borderRadius={1} mb={2} />
 
       <List>
-        {items.map((item) => (
-          <ListItemButton key={item.name} sx={{ mb: 1 }}>
+        {items.map((item,index) => (
+          <ListItemButton key={item.name} sx={{ mb: 1 }} onClick={()=>handleItemClick(item.route)}>
             <ListItemIcon sx={{ color: "white" }}>{item.icon}</ListItemIcon>
             <ListItemText primary={item.name} />
           </ListItemButton>
