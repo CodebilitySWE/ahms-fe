@@ -12,46 +12,62 @@ import {
   useTheme,
   useMediaQuery,
 } from "@mui/material";
-import { NavLink } from "react-router-dom";
-
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GroupIcon from "@mui/icons-material/Group";
-import AssignmentIcon from "@mui/icons-material/Assignment";
-import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import ReportIcon from "@mui/icons-material/Assignment";
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import PersonIcon from "@mui/icons-material/Person";
 import BarChartIcon from "@mui/icons-material/BarChart";
-
+import FeedbackIcon from "@mui/icons-material/Feedback"; // ✅ NEW ICON
 import logo from "../../assets/logo.png";
+import { NavLink } from "react-router-dom";
+
+// ✅ Route mapping for all roles
+const pathMap = {
+  Dashboard: "/student/dashboard",
+  LComplaint: "/student/lodge-complaint",
+  Complaint: "/student/complaints",
+  Complaints: "/student/complaints",
+  Notifications: "/student/notifications",
+  Profile: "/student/profile",
+
+  // Artisan routes
+  "Job Request": "/artisan/job-request",
+  "Upload Report": "/artisan/upload-report",
+  Statistics: "/artisan/statistics",
+
+  // Admin routes
+  "Manage Users": "/admin/manage-users",
+};
 
 const sidebarComponents = {
   student: [
-    { name: "Dashboard", icon: <DashboardIcon />, path: "/student/dashboard" },
-    { name: "Lodge Complaint", icon: <AssignmentOutlinedIcon />, path: "/student/lodge-complaint" },
-    { name: "Complaints", icon: <AssignmentIcon />, path: "/student/complaints" },
-    { name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/student/notifications" },
-    { name: "Profile", icon: <PersonIcon />, path: "/student/profile" },
+    { name: "Dashboard", icon: <DashboardIcon /> },
+    { name: "LComplaint", icon: <FeedbackIcon /> }, // ✅ Updated icon
+    { name: "Complaint", icon: <ReportIcon /> },
+    { name: "Notifications", icon: <NotificationsOutlinedIcon /> },
+    { name: "Profile", icon: <PersonIcon /> },
   ],
   artisan: [
-    { name: "Dashboard", icon: <DashboardIcon />, path: "/artisan/dashboard" },
-    { name: "Job Request", icon: <AssignmentIcon />, path: "/artisan/job-request" },
-    { name: "Upload Report", icon: <AssignmentOutlinedIcon />, path: "/artisan/upload-report" },
-    { name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/artisan/notifications" },
-    { name: "Profile", icon: <PersonIcon />, path: "/artisan/profile" },
-    { name: "Statistics", icon: <BarChartIcon />, path: "/artisan/statistics" },
+    { name: "Dashboard", icon: <DashboardIcon /> },
+    { name: "Job Request", icon: <ReportIcon /> },
+    { name: "Upload Report", icon: <ReportIcon /> },
+    { name: "Notifications", icon: <NotificationsOutlinedIcon /> },
+    { name: "Profile", icon: <PersonIcon /> },
+    { name: "Statistics", icon: <BarChartIcon /> },
   ],
   admin: [
-    { name: "Dashboard", icon: <DashboardIcon />, path: "/admin/dashboard" },
-    { name: "Manage Users", icon: <GroupIcon />, path: "/admin/manage-users" },
-    { name: "Complaints", icon: <AssignmentIcon />, path: "/admin/complaints" },
-    { name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/admin/notifications" },
-    { name: "Profile", icon: <PersonIcon />, path: "/admin/profile" },
-    { name: "Statistics", icon: <BarChartIcon />, path: "/admin/statistics" },
+    { name: "Dashboard", icon: <DashboardIcon /> },
+    { name: "Manage Users", icon: <GroupIcon /> },
+    { name: "Complaints", icon: <ReportIcon /> },
+    { name: "Notifications", icon: <NotificationsOutlinedIcon /> },
+    { name: "Profile", icon: <PersonIcon /> },
+    { name: "Statistics", icon: <BarChartIcon /> },
   ],
 };
 
-const Sidebar = ({ role = "admin" }) => {
+const Sidebar = ({ role = "student" }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -73,28 +89,22 @@ const Sidebar = ({ role = "admin" }) => {
 
       <List>
         {items.map((item) => (
-          <ListItemButton
+          <NavLink
             key={item.name}
-            component={NavLink}
-            to={item.path}
-            sx={({ isActive }) => ({
-              mb: 1,
-              backgroundColor: isActive ? "#1976d2" : "transparent",
-              color: isActive ? "white" : "inherit",
-              borderRadius: 2,
-              "&:hover": {
-                backgroundColor: "#2196f3",
-              },
+            to={pathMap[item.name] || "#"}
+            style={({ isActive }) => ({
+              textDecoration: "none",
+              color: "inherit",
+              backgroundColor: isActive ? "#00b0ff" : "transparent",
+              borderRadius: "8px",
+              display: "block",
             })}
           >
-            <ListItemIcon sx={{ color: "white" }}>{item.icon}</ListItemIcon>
-            <ListItemText
-              primary={item.name}
-              primaryTypographyProps={{
-                color: "inherit",
-              }}
-            />
-          </ListItemButton>
+            <ListItemButton sx={{ mb: 1 }}>
+              <ListItemIcon sx={{ color: "white" }}>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.name} />
+            </ListItemButton>
+          </NavLink>
         ))}
       </List>
 
