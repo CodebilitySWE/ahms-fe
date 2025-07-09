@@ -21,6 +21,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import logo from "../../assets/logo.png";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
  
 
 
@@ -51,7 +52,9 @@ const sidebarComponents = {//sidebar components based on user
   ],
 };
 
-const Sidebar = ({ role = "admin" }) => {//behaviour on mobile 
+const Sidebar = () => {//behaviour on mobile 
+  const { user } = useAuth();
+  const role = user?.role || 'student';
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
