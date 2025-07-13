@@ -9,6 +9,8 @@ import {
   TableRow,
 } from "@mui/material";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ahms-be-obre.onrender.com/';
+
 const ManageUsers = () => {
   const [artisans, setArtisans] = useState([]);
   const [students, setStudents] = useState([]);
@@ -16,26 +18,64 @@ const ManageUsers = () => {
   useEffect(() => {
     const fetchArtisans = async () => {
       try {
-        const response = await fetch(
-          "https://ahms-be-obre.onrender.com/api/admin/artisans"
-        );
+
+        const token = localStorage.getItem('authToken')
+
+        if(!token){
+                throw new Error("Auth failed")
+            }
+
+        const url = `${API_BASE_URL}/api/admin/artisans`
+
+        const urlWithParams = new URL(url)
+        urlWithParams.searchParams.append('limit', '3')
+        urlWithParams.searchParams.append('offset', '0')
+
+        const response = await fetch(urlWithParams.toString(), {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
         const data = await response.json();
         setArtisans(data.slice(0, 2));
       } catch (error) {
         console.error("Error", error);
       }
+      return
     };
 
     const fetchStudents = async () => {
       try {
-        const response = await fetch(
-          "https://ahms-be-obre.onrender.com/api/admin/students"
-        );
+        const token = localStorage.getItem('authToken')
+        console.log('Token:', token);
+
+        if(!token){
+                throw new Error("Auth failed")
+            }
+
+            const url = `${API_BASE_URL}/api/admin/artisans`
+
+        const urlWithParams = new URL(url)
+        urlWithParams.searchParams.append('limit', '3')
+        urlWithParams.searchParams.append('offset', '0')
+
+        const response = await fetch(urlWithParams.toString(), {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            })
         const data = await response.json();
-        setStudents(data.slice(0, 2));
+        setArtisans(data.slice(0, 2));
       } catch (error) {
         console.error("Error", error);
       }
+      return
     };
 
     fetchArtisans();
@@ -43,7 +83,7 @@ const ManageUsers = () => {
   }, []);
 
   return (
-    <Box sx={{ p: { xs: 2, md: 4 } }}>
+    <Box sx={{ p: { xs: 2, md: 4 }, mt: {xs:18, md:20}, ml: { xs: 0, md: "280px" }, }}>
       {/* Artisans */}
       <Box
         sx={{
@@ -53,33 +93,40 @@ const ManageUsers = () => {
           boxShadow: 2,
           mb: 5,
           pt: 5,
+          pb: 4,
           px: { xs: 1, sm: 2 },
-          overflowX: "hidden",
+          
         }}
       >
         <Typography //artisans blue header box
           variant="h6"
           sx={{
             position: "absolute",
-            top: -12,
+            top: -20,
             left: 0,
+            right: 0,
             backgroundColor: "#2196f3",
             width: "100%",
             color: "white",
             py: 1,
+            px: 3,
             borderRadius: 2,
             textAlign: "center",
             fontWeight: "bold",
+            width: "95%",
+            mx: "auto",
+            
           }}
         >
           Artisans
         </Typography>
 
-        <Box sx={{ width: "100%" }}>
+        <Box sx={{ width: "100%", overflowX: "auto"  }}>
           <Table
             sx={{
               width: "100%",
-              tableLayout: "auto",
+              tableLayout: "fixed",
+              
             }}
           >
             <TableHead>
@@ -97,6 +144,7 @@ const ManageUsers = () => {
                     sx={{
                       wordBreak: "break-word",
                       whiteSpace: "normal",
+                      maxWidth: 100,
                     }}
                   >
                     {a.artisan}
@@ -136,16 +184,17 @@ const ManageUsers = () => {
           borderRadius: 2,
           boxShadow: 2,
           pt: 5,
+          pb: 4,
           px: { xs: 1, sm: 2 },
-          overflowX: "hidden",
         }}
       >
         <Typography //students blue header box
           variant="h6"
           sx={{
             position: "absolute",
-            top: -12,
+            top: -20,
             left: 0,
+            right: 0,
             width: "100%",
             backgroundColor: "#2196f3",
             color: "white",
@@ -153,6 +202,9 @@ const ManageUsers = () => {
             borderRadius: 2,
             fontWeight: "bold",
             textAlign: "center",
+            width: "95%",
+            mx: "auto",
+            
           }}
         >
           Students
@@ -163,6 +215,7 @@ const ManageUsers = () => {
             sx={{
               width: "100%",
               tableLayout: "auto",
+              
             }}
           >
             <TableHead>
