@@ -182,21 +182,21 @@ const ManageUsers = () => {
 
   return (
     <Box>
-      {/* Fixed Navbar at the top */}
+      
       <Navbar />
 
       {/* Main layout: Sidebar + Page content */}
       <Box display="flex">
         <Sidebar />
 
-        {/* Main Content */}
+        
         <Box
           flexGrow={1}
           ml={{ md: "280px" }}
           p={3}
           bgcolor="#f8f4f4ff"
           minHeight="100vh"
-           // Push down content to avoid overlapping fixed Navbar
+           
         >
           {loading ? (
             <Box display="flex" justifyContent="center" mt={5}>
