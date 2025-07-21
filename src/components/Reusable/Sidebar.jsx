@@ -41,7 +41,7 @@ const sidebarComponents = {
   ],
   admin: [
     { name: "Dashboard", icon: <DashboardIcon />, path: "/admin/dashboard" },
-    { name: "Manage Users", icon: <GroupIcon />, path: "/admin/users" },
+    { name: "Manage Users", icon: <GroupIcon />, path: "/admin/manage-users" },
     { name: "Complaints", icon: <ReportIcon />, path: "/admin/complaints" },
     { name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/admin/notifications" },
     { name: "Profile", icon: <PersonIcon />, path: "/admin/profile" },
