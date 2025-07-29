@@ -166,7 +166,7 @@ const Dashboard = () => {
 
   return (
     <Box display="flex" minHeight="100vh">
-      <Sidebar role="admin" />
+      <Sidebar />
       <Box flex={1} display="flex" flexDirection="column" sx={{ minWidth: 0 }}>
         <NavBar notificationCount={5} />
         

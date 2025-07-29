@@ -1,4 +1,5 @@
 import React, {useState} from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { 
   Drawer,
   List,
@@ -20,43 +21,60 @@ import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined
 import PersonIcon from "@mui/icons-material/Person";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import logo from "../../assets/logo.png";
-
+import { useAuth } from "../../contexts/AuthContext";
 
 const sidebarComponents = {//sidebar components based on user
   student: [
-    {name: "Dashboard", icon: <DashboardIcon />},
-    {name: "LComplaint", icon: <ReportIcon />},
-    {name: "Complaint", icon: <ReportIcon />},
-    {name: "Notifications", icon: <NotificationsOutlinedIcon />},
-    {name: "Profile", icon: <PersonIcon />},
+    {name: "Dashboard", icon: <DashboardIcon />, path: "/student/dashboard"},
+    {name: "LComplaint", icon: <ReportIcon />, path: "/student/lcomplaint"},
+    {name: "Complaint", icon: <ReportIcon />, path: "/student/complaint"},
+    {name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/student/notifications"},
+    {name: "Profile", icon: <PersonIcon />, path: "/student/profile"},
   ],
   artisan: [
-    {name: "Dashboard", icon: <DashboardIcon />},
-    {name: "Job Request", icon: <ReportIcon />},
-    {name: "Upload Report", icon: <ReportIcon />},
-    {name: "Notifications", icon: <NotificationsOutlinedIcon />},
-    {name: "Profile", icon: <PersonIcon />},
-    {name: "Statistics", icon: <BarChartIcon />},
+    {name: "Dashboard", icon: <DashboardIcon />, path: "/artisan/dashboard"},
+    {name: "Job Request", icon: <ReportIcon />, path: "/artisan/job-request"},
+    {name: "Upload Report", icon: <ReportIcon />, path: "/artisan/upload-report"},
+    {name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/artisan/notifications"},
+    {name: "Profile", icon: <PersonIcon />, path: "/artisan/profile"},
+    {name: "Statistics", icon: <BarChartIcon />, path: "/artisan/statistics"},
   ],
   admin: [
-    {name: "Dashboard", icon: <DashboardIcon />},
-    {name: "Manage Users", icon: <GroupIcon />},
-    {name: "Complaints", icon: <ReportIcon />},
-    {name: "Notifications", icon: <NotificationsOutlinedIcon />},
-    {name: "Profile", icon: <PersonIcon />},
-    {name: "Statistics", icon: <BarChartIcon />},
+    {name: "Dashboard", icon: <DashboardIcon />, path: "/admin/dashboard"},
+    {name: "Manage Users", icon: <GroupIcon />, path: "/admin/manage-users"},
+    {name: "Complaints", icon: <ReportIcon />, path: "/admin/complaints"},
+    {name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/admin/notifications"},
+    {name: "Profile", icon: <PersonIcon />, path: "/admin/profile"},
+    {name: "Statistics", icon: <BarChartIcon />, path: "/admin/statistics"},
   ],
 };
 
-const Sidebar = ({ role = "admin" }) => {//behaviour on mobile 
+const Sidebar = () => {//behaviour on mobile 
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, logout } = useAuth();
+  
+  const role = user?.role || "admin"; // fallback to admin for demo
   const items = sidebarComponents[role] || [];
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
-};
+  };
+
+  const handleNavigation = (path) => {
+    navigate(path);
+    if (isMobile) {
+      setMobileOpen(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
 
   const drawerContent =(
     <Box display = "flex" flexDirection = "column" height = "100%" p ={2}>
@@ -70,9 +88,21 @@ const Sidebar = ({ role = "admin" }) => {//behaviour on mobile
 
       <List>
         {items.map((item) => (
-          <ListItemButton key={item.name} sx={{ mb: 1 }}>
-            <ListItemIcon sx={{ color: "white" }}>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.name} />
+          <ListItemButton 
+            key={item.name} 
+            sx={{ 
+              mb: 1,
+              backgroundColor: location.pathname === item.path ? "#17B1EA" : "transparent",
+              color: location.pathname === item.path ? "white" : "white",
+              "&:hover": {
+                backgroundColor: "#17B1EA",
+                color: "white",
+              },
+            }}
+            onClick={() => handleNavigation(item.path)}
+          >
+            <ListItemIcon sx={{ color: location.pathname === item.path ? "white" : "white" }}>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.name} sx={{ color: location.pathname === item.path ? "white" : "white" }} />
           </ListItemButton>
         ))}
       </List>
@@ -83,6 +113,7 @@ const Sidebar = ({ role = "admin" }) => {//behaviour on mobile
         <Button
           variant="contained"
           fullWidth
+          onClick={handleLogout}
           sx={{
             backgroundColor: "#00b0ff",
             textTransform: "none",
@@ -131,14 +162,4 @@ const Sidebar = ({ role = "admin" }) => {//behaviour on mobile
   );
 };
 
-const App = () => {
-  const userRole = "admin"; 
-  return( 
-    <Box display = "flex">
-      <Sidebar role = {userRole} />
-      <Box p = {3} flexGrow ={1}></Box>
-    </Box>
-  );
-};
-
-export default App;
+export default Sidebar;
