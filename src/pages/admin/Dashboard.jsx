@@ -5,6 +5,8 @@ import { useThemeContext } from '../../contexts/ThemeContext';
 import NavBar from '../../components/Reusable/NavBar';
 import Sidebar from '../../components/Reusable/Sidebar';
 import DashboardCard from '../../components/Reusable/DashboardCard';
+import Notification from '../../components/Reusable/Notification';
+
 
 // Icons for the cards
 import BarChartIcon from '@mui/icons-material/BarChart';
