@@ -22,7 +22,7 @@ const artisanNavItems = [
 const Dashboard = () => {
   return (
     <Box display="flex" minHeight="100vh">
-      <Sidebar role="artisan" />
+      <Sidebar />
       <Box flex={1} display="flex" flexDirection="column" sx={{ minWidth: 0 }}>
         <NavBar userType="artisan" pageTitle="Dashboard" />
       </Box>
