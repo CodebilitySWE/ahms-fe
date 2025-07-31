@@ -17,7 +17,7 @@ const studentNavItems = [
 const Dashboard = () => {
   return (
     <Box display="flex" minHeight="100vh">
-      <Sidebar role="student" />
+      <Sidebar />
       <Box flex={1} display="flex" flexDirection="column" sx={{ minWidth: 0 }}>
         <NavBar userType="student" pageTitle="Dashboard" />
       </Box>
