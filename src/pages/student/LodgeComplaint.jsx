@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Button,
@@ -8,6 +9,9 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
+  Alert,
+  Snackbar,
+  CircularProgress,
 } from '@mui/material';
 import ImageIcon from '@mui/icons-material/Image';
 import Sidebar from '../../components/Reusable/Sidebar';
@@ -20,6 +24,7 @@ export default function LComplaint() {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     room_number: '',
@@ -34,6 +39,8 @@ export default function LComplaint() {
 
   const [categories, setCategories] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const closeSidebar = () => setIsSidebarOpen(false);
 
@@ -68,9 +75,11 @@ export default function LComplaint() {
     // Validate required fields
     if (!formData.title || !formData.description || !formData.category_id || 
         !formData.location || !formData.room_number || !formData.block) {
-      alert('Please fill in all required fields');
+      setAlert({ open: true, message: 'Please fill in all required fields', severity: 'error' });
       return;
     }
+
+    setIsSubmitting(true);
 
     const data = new FormData();
     
@@ -99,7 +108,7 @@ export default function LComplaint() {
       const responseData = await res.json();
 
       if (res.ok) {
-        alert('Complaint submitted successfully!');
+        setAlert({ open: true, message: 'Complaint submitted successfully!', severity: 'success' });
         setFormData({
           room_number: '',
           location: 'Akuafo Hall',
@@ -110,13 +119,23 @@ export default function LComplaint() {
           description: '',
           attachment: null,
         });
+        // Redirect to complaints page after successful submission
+        setTimeout(() => {
+          navigate('/student/complaints');
+        }, 2000);
       } else {
-        alert(responseData.message || 'Submission failed!');
+        setAlert({ open: true, message: responseData.message || 'Submission failed!', severity: 'error' });
       }
     } catch (err) {
       console.error(err);
-      alert('An error occurred.');
+      setAlert({ open: true, message: 'An error occurred.', severity: 'error' });
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  const handleCloseAlert = () => {
+    setAlert({ ...alert, open: false });
   };
 
   return (
@@ -300,6 +319,7 @@ export default function LComplaint() {
             <Button
               type="submit"
               variant="contained"
+              disabled={isSubmitting}
               sx={{
                 backgroundColor: '#1976d2',
                 color: '#fff',
@@ -312,11 +332,34 @@ export default function LComplaint() {
                 py: 1.5,
               }}
             >
-              Submit Complaint
+              {isSubmitting ? (
+                <>
+                  <CircularProgress size={20} sx={{ color: 'white', mr: 1 }} />
+                  Submitting...
+                </>
+              ) : (
+                'Submit Complaint'
+              )}
             </Button>
           </Box>
         </Box>
       </Box>
+
+      {/* Success/Error Alert */}
+      <Snackbar
+        open={alert.open}
+        autoHideDuration={4000}
+        onClose={handleCloseAlert}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert 
+          onClose={handleCloseAlert} 
+          severity={alert.severity}
+          sx={{ width: '100%' }}
+        >
+          {alert.message}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
