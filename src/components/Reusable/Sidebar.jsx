@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, {useState} from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   Drawer,
   List,
@@ -22,45 +23,63 @@ import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined
 import PersonIcon from "@mui/icons-material/Person";
 import BarChartIcon from "@mui/icons-material/BarChart";
 import logo from "../../assets/logo.png";
+import { useAuth } from "../../contexts/AuthContext";
 
-const sidebarComponents = {
+const sidebarComponents = {//sidebar components based on user
   student: [
-    { name: "Dashboard", icon: <DashboardIcon />, path: "/student/dashboard" },
-    { name: "Lodge Complaint", icon: <AssignmentOutlinedIcon />, path: "/student/lodge-complaint" },
-    { name: "Complaints", icon: <ReportIcon />, path: "/student/complaints" },
-    { name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/student/notifications" },
-    { name: "Profile", icon: <PersonIcon />, path: "/student/profile" },
+    {name: "Dashboard", icon: <DashboardIcon />, path: "/student/dashboard"},
+    {name: "LComplaint", icon: <ReportIcon />, path: "/student/lcomplaint"},
+    {name: "Complaint", icon: <ReportIcon />, path: "/student/complaint"},
+    {name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/student/notifications"},
+    {name: "Profile", icon: <PersonIcon />, path: "/student/profile"},
   ],
   artisan: [
-    { name: "Dashboard", icon: <DashboardIcon />, path: "/artisan/dashboard" },
-    { name: "Job Request", icon: <ReportIcon />, path: "/artisan/job-request" },
-    { name: "Upload Report", icon: <ReportIcon />, path: "/artisan/upload-report" },
-    { name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/artisan/notifications" },
-    { name: "Profile", icon: <PersonIcon />, path: "/artisan/profile" },
-    { name: "Statistics", icon: <BarChartIcon />, path: "/artisan/statistics" },
+    {name: "Dashboard", icon: <DashboardIcon />, path: "/artisan/dashboard"},
+    {name: "Job Request", icon: <ReportIcon />, path: "/artisan/job-request"},
+    {name: "Upload Report", icon: <ReportIcon />, path: "/artisan/upload-report"},
+    {name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/artisan/notifications"},
+    {name: "Profile", icon: <PersonIcon />, path: "/artisan/profile"},
+    {name: "Statistics", icon: <BarChartIcon />, path: "/artisan/statistics"},
   ],
   admin: [
-    { name: "Dashboard", icon: <DashboardIcon />, path: "/admin/dashboard" },
-    { name: "Manage Users", icon: <GroupIcon />, path: "/admin/manage-users" },
-    { name: "Complaints", icon: <ReportIcon />, path: "/admin/complaints" },
-    { name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/admin/notifications" },
-    { name: "Profile", icon: <PersonIcon />, path: "/admin/profile" },
-    { name: "Statistics", icon: <BarChartIcon />, path: "/admin/statistics" },
+    {name: "Dashboard", icon: <DashboardIcon />, path: "/admin/dashboard"},
+    {name: "Manage Users", icon: <GroupIcon />, path: "/admin/manage-users"},
+    {name: "Complaints", icon: <ReportIcon />, path: "/admin/complaints"},
+    {name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/admin/notifications"},
+    {name: "Profile", icon: <PersonIcon />, path: "/admin/profile"},
+    {name: "Statistics", icon: <BarChartIcon />, path: "/admin/statistics"},
   ],
 };
 
-const Sidebar = ({ role = "admin" }) => {
+const Sidebar = () => {//behaviour on mobile
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user, logout } = useAuth();
+
+  const role = user?.role || "admin"; // fallback to admin for demo
   const items = sidebarComponents[role] || [];
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
-  const drawerContent = (
-    <Box display="flex" flexDirection="column" height="100%" p={2}>
+  const handleNavigation = (path) => {
+    navigate(path);
+    if (isMobile) {
+      setMobileOpen(false);
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const drawerContent =(
+    <Box display = "flex" flexDirection = "column" height = "100%" p ={2}>
       <Box display="flex" alignItems="center" gap={1} mb={4} mt={2}>
         <img src={logo} alt="Logo" style={{ height: 35 }} />
         <Typography variant="h6" sx={{ fontWeight: "bold", color: "#00b0ff" }}>
@@ -73,23 +92,19 @@ const Sidebar = ({ role = "admin" }) => {
         {items.map((item) => (
           <ListItemButton
             key={item.name}
-            component={NavLink}
-            to={item.path}
             sx={{
               mb: 1,
-              borderRadius: 2,
-              color: "white",
-              textDecoration: "none",
+              backgroundColor: location.pathname === item.path ? "#17B1EA" : "transparent",
+              color: location.pathname === item.path ? "white" : "white",
               "&:hover": {
-                backgroundColor: "#00b0ff",
-              },
-              "&.active": {
-                backgroundColor: "#00b0ff",
+                backgroundColor: "#17B1EA",
+                color: "white",
               },
             }}
+            onClick={() => handleNavigation(item.path)}
           >
-            <ListItemIcon sx={{ color: "inherit" }}>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.name} />
+            <ListItemIcon sx={{ color: location.pathname === item.path ? "white" : "white" }}>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.name} sx={{ color: location.pathname === item.path ? "white" : "white" }} />
           </ListItemButton>
         ))}
       </List>
@@ -100,6 +115,7 @@ const Sidebar = ({ role = "admin" }) => {
         <Button
           variant="contained"
           fullWidth
+          onClick={handleLogout}
           sx={{
             backgroundColor: "#00b0ff",
             textTransform: "none",
