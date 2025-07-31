@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { 
+import {
   Drawer,
   List,
   ListItemButton,
@@ -12,11 +12,13 @@ import {
   IconButton,
   useTheme,
   useMediaQuery,
- } from "@mui/material";
+} from "@mui/material";
+import { NavLink } from "react-router-dom";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GroupIcon from "@mui/icons-material/Group";
 import ReportIcon from "@mui/icons-material/Assignment";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import PersonIcon from "@mui/icons-material/Person";
 import BarChartIcon from "@mui/icons-material/BarChart";
@@ -26,8 +28,8 @@ import { useAuth } from "../../contexts/AuthContext";
 const sidebarComponents = {//sidebar components based on user
   student: [
     {name: "Dashboard", icon: <DashboardIcon />, path: "/student/dashboard"},
-    {name: "LComplaint", icon: <ReportIcon />, path: "/student/lcomplaint"},
-    {name: "Complaint", icon: <ReportIcon />, path: "/student/complaint"},
+    {name: "Lodge Complaint", icon: <ReportIcon />, path: "/student/lodge-complaint"},
+    {name: "My Complaints", icon: <ReportIcon />, path: "/student/complaints"},
     {name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/student/notifications"},
     {name: "Profile", icon: <PersonIcon />, path: "/student/profile"},
   ],
@@ -49,14 +51,14 @@ const sidebarComponents = {//sidebar components based on user
   ],
 };
 
-const Sidebar = () => {//behaviour on mobile 
+const Sidebar = () => {//behaviour on mobile
   const [mobileOpen, setMobileOpen] = useState(false);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  
+
   const role = user?.role || "admin"; // fallback to admin for demo
   const items = sidebarComponents[role] || [];
 
@@ -88,9 +90,9 @@ const Sidebar = () => {//behaviour on mobile
 
       <List>
         {items.map((item) => (
-          <ListItemButton 
-            key={item.name} 
-            sx={{ 
+          <ListItemButton
+            key={item.name}
+            sx={{
               mb: 1,
               backgroundColor: location.pathname === item.path ? "#17B1EA" : "transparent",
               color: location.pathname === item.path ? "white" : "white",
@@ -145,7 +147,7 @@ const Sidebar = () => {//behaviour on mobile
         sx={{
           "& .MuiDrawer-paper": {
             width: 250,
-            backgroundColor: "#2c2c2c", 
+            backgroundColor: "#2c2c2c",
             color: "white",
             borderRadius: 2,
             mt: isMobile ? 0 : 2,

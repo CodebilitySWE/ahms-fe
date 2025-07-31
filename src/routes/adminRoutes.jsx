@@ -15,52 +15,52 @@ const AdminRoutes = () => [
       <ProtectedRoute allowedRoles={['admin']}>
         <Dashboard />
       </ProtectedRoute>
-    } 
+    }
   />,
-  <Route 
-    key="admin-complaints" 
-    path="/admin/complaints" 
+  <Route
+    key="admin-complaints"
+    path="/admin/complaints"
     element={
       <ProtectedRoute allowedRoles={['admin']}>
         <Complaints />
       </ProtectedRoute>
-    } 
+    }
   />,
-  <Route 
-    key="admin-manage-users" 
-    path="/admin/manage-users" 
+  <Route
+    key="admin-manage-users"
+    path="/admin/manage-users"
     element={
       <ProtectedRoute allowedRoles={['admin']}>
         <ManageUsers />
       </ProtectedRoute>
-    } 
+    }
   />,
-  <Route 
-    key="admin-notifications" 
-    path="/admin/notifications" 
+  <Route
+    key="admin-notifications"
+    path="/admin/notifications"
     element={
       <ProtectedRoute allowedRoles={['admin']}>
         <Notifications />
       </ProtectedRoute>
-    } 
+    }
   />,
-  <Route 
-    key="admin-profile" 
-    path="/admin/profile" 
+  <Route
+    key="admin-profile"
+    path="/admin/profile"
     element={
       <ProtectedRoute allowedRoles={['admin']}>
         <Profile />
       </ProtectedRoute>
-    } 
+    }
   />,
-  <Route 
-    key="admin-statistics" 
-    path="/admin/statistics" 
+  <Route
+    key="admin-statistics"
+    path="/admin/statistics"
     element={
       <ProtectedRoute allowedRoles={['admin']}>
         <Statistics />
       </ProtectedRoute>
-    } 
+    }
   />
 ];
 
