@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import {
   Box,
@@ -12,11 +11,13 @@ import {
   Button,
   Pagination,
 } from "@mui/material";
-import axios from "axios";
 import { Add } from "@mui/icons-material";
 
 import Sidebar from "../../components/Reusable/Sidebar";
 import Navbar from "../../components/Reusable/NavBar";
+
+//  RESOLVED: Replaced inline axios call with fetchUsers from userUtils
+import { fetchUsers } from "../../utils/userUtils";
 
 const ManageUsers = () => {
   const [students, setStudents] = useState([]);
@@ -24,28 +25,23 @@ const ManageUsers = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const fetchAndSetUsers = async () => {
       try {
         const token = localStorage.getItem("token");
-        const headers = {
-          Authorization: `Bearer ${token}`,
-        };
 
-        const [studentRes, artisanRes] = await Promise.all([
-          axios.get("https://ahms-be-obre.onrender.com/api/admin/manage_users/students", { headers }),
-          axios.get("https://ahms-be-obre.onrender.com/api/admin/manage_users/artisans", { headers }),
-        ]);
+        //  RESOLVED: moved to utility file(userUtils.js)
+        const { students, artisans } = await fetchUsers(token);
 
-        setStudents(studentRes.data.students || []);
-        setArtisans(artisanRes.data.artisans || []);
+        setStudents(students);
+        setArtisans(artisans);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Failed to load users:", error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchUsers();
+    fetchAndSetUsers();
   }, []);
 
   const renderStudentTable = () => (
@@ -182,21 +178,16 @@ const ManageUsers = () => {
 
   return (
     <Box>
-      
       <Navbar />
 
-      {/* Main layout: Sidebar + Page content */}
       <Box display="flex">
         <Sidebar />
-
-        
         <Box
           flexGrow={1}
           ml={{ md: "280px" }}
           p={3}
           bgcolor="#f8f4f4ff"
           minHeight="100vh"
-           
         >
           {loading ? (
             <Box display="flex" justifyContent="center" mt={5}>

@@ -14,6 +14,8 @@ import Sidebar from '../../components/Reusable/Sidebar';
 import NavBar from '../../components/Reusable/NavBar';
 import { useAuth } from '../../contexts/AuthContext';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; //  Moved base URL to .env (Resolved)
+
 export default function LComplaint() {
   const theme = useTheme();
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
@@ -50,7 +52,7 @@ export default function LComplaint() {
     }
 
     try {
-      const res = await fetch('https://ahms-be-obre.onrender.com/api/complaints', {
+      const res = await fetch(`${API_BASE_URL}/api/complaints`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${user?.token}`,
@@ -94,7 +96,7 @@ export default function LComplaint() {
           width: '100%',
           maxWidth: '1095px',
           mx: 'auto',
-          ml: { xs: 0, sm: '250px' }, // <-- THIS LINE fixes the sidebar overlap
+          ml: { xs: 0, sm: '250px' },
           transition: 'margin-left 0.3s ease-in-out',
         }}
       >
