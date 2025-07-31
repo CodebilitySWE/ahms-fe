@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Button,
@@ -14,7 +14,7 @@ import Sidebar from '../../components/Reusable/Sidebar';
 import NavBar from '../../components/Reusable/NavBar';
 import { useAuth } from '../../contexts/AuthContext';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL; //  Moved base URL to .env (Resolved)
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export default function LComplaint() {
   const theme = useTheme();
@@ -22,19 +22,37 @@ export default function LComplaint() {
   const { user } = useAuth();
 
   const [formData, setFormData] = useState({
-    roomNo: '',
-    date: '',
+    room_number: '',
+    location: 'Akuafo Hall',
     block: '',
-    category: '',
+    category_id: '',
     priority: '',
     title: '',
     description: '',
-    image: null,
+    attachment: null,
   });
 
+  const [categories, setCategories] = useState([]);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const closeSidebar = () => setIsSidebarOpen(false);
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/complaints/categories`);
+        if (response.ok) {
+          const data = await response.json();
+          setCategories(data.data);
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
@@ -46,9 +64,27 @@ export default function LComplaint() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.title || !formData.description || !formData.category_id || 
+        !formData.location || !formData.room_number || !formData.block) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
     const data = new FormData();
-    for (const key in formData) {
-      data.append(key, formData[key]);
+    
+    // Map form data to backend expected field names
+    data.append('title', formData.title);
+    data.append('description', formData.description);
+    data.append('category_id', formData.category_id);
+    data.append('location', formData.location);
+    data.append('room_number', formData.room_number);
+    data.append('block', formData.block);
+    data.append('priority', formData.priority || 'medium');
+    
+    if (formData.attachment) {
+      data.append('attachment', formData.attachment);
     }
 
     try {
@@ -60,22 +96,22 @@ export default function LComplaint() {
         body: data,
       });
 
+      const responseData = await res.json();
+
       if (res.ok) {
         alert('Complaint submitted successfully!');
         setFormData({
-          roomNo: '',
-          date: '',
+          room_number: '',
+          location: 'Akuafo Hall',
           block: '',
-          category: '',
+          category_id: '',
           priority: '',
           title: '',
           description: '',
-          image: null,
+          attachment: null,
         });
-      } else if (res.status === 401) {
-        alert('Unauthorized. Please log in again.');
       } else {
-        alert('Submission failed!');
+        alert(responseData.message || 'Submission failed!');
       }
     } catch (err) {
       console.error(err);
@@ -132,22 +168,23 @@ export default function LComplaint() {
           color={theme.palette.text.primary}
         >
           <TextField
-            label="Room No"
-            name="roomNo"
+            label="Room Number *"
+            name="room_number"
             fullWidth
-            value={formData.roomNo}
+            required
+            value={formData.room_number}
             onChange={handleChange}
             sx={{ gridColumn: 'span 12' }}
           />
 
           <TextField
-            label="Date"
-            name="date"
-            type="date"
-            InputLabelProps={{ shrink: true }}
-            value={formData.date}
+            label="Location *"
+            name="location"
+            fullWidth
+            required
+            value={formData.location}
             onChange={handleChange}
-            sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }}
+            sx={{ gridColumn: 'span 12' }}
           />
 
           <Select
@@ -155,27 +192,29 @@ export default function LComplaint() {
             name="block"
             value={formData.block}
             onChange={handleChange}
+            required
             sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }}
           >
-            <MenuItem value="" disabled>Select Block</MenuItem>
+            <MenuItem value="" disabled>Select Block *</MenuItem>
+            <MenuItem value="Main">Main</MenuItem>
             <MenuItem value="Annex A">Annex A</MenuItem>
             <MenuItem value="Annex B">Annex B</MenuItem>
           </Select>
 
           <Select
             displayEmpty
-            name="category"
-            value={formData.category}
+            name="category_id"
+            value={formData.category_id}
             onChange={handleChange}
+            required
             sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }}
           >
-            <MenuItem value="" disabled>Select Category</MenuItem>
-            <MenuItem value="Plumbing">Plumbing</MenuItem>
-            <MenuItem value="Electrical">Electrical</MenuItem>
-            <MenuItem value="Carpentry">Carpentry</MenuItem>
-            <MenuItem value="Painting">Painting</MenuItem>
-            <MenuItem value="Security">Security</MenuItem>
-            <MenuItem value="Cleanliness">Cleanliness</MenuItem>
+            <MenuItem value="" disabled>Select Category *</MenuItem>
+            {categories.map((category) => (
+              <MenuItem key={category.id} value={category.id}>
+                {category.name}
+              </MenuItem>
+            ))}
           </Select>
 
           <Select
@@ -186,32 +225,34 @@ export default function LComplaint() {
             sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }}
           >
             <MenuItem value="" disabled>Select Priority</MenuItem>
-            <MenuItem value="Low">Low</MenuItem>
-            <MenuItem value="Medium">Medium</MenuItem>
-            <MenuItem value="High">High</MenuItem>
-            <MenuItem value="Urgent">Urgent</MenuItem>
+            <MenuItem value="low">Low</MenuItem>
+            <MenuItem value="medium">Medium</MenuItem>
+            <MenuItem value="high">High</MenuItem>
+            <MenuItem value="urgent">Urgent</MenuItem>
           </Select>
 
           <TextField
-            label="Title"
+            label="Title *"
             name="title"
+            required
             value={formData.title}
             onChange={handleChange}
             sx={{ gridColumn: 'span 12' }}
           />
 
           <TextField
-            label="Description"
+            label="Description *"
             name="description"
             multiline
             minRows={4}
+            required
             value={formData.description}
             onChange={handleChange}
             sx={{ gridColumn: 'span 12' }}
           />
 
           <Box sx={{ gridColumn: { xs: 'span 12', md: 'span 6' } }}>
-            <label htmlFor="image">
+            <label htmlFor="attachment">
               <Box
                 sx={{
                   width: '100%',
@@ -232,14 +273,14 @@ export default function LComplaint() {
               >
                 <ImageIcon fontSize="large" />
                 <Typography variant="body2" sx={{ mt: 1, fontSize: '14px' }}>
-                  {formData.image ? formData.image.name : 'Attach image'}
+                  {formData.attachment ? formData.attachment.name : 'Attach image'}
                 </Typography>
               </Box>
             </label>
             <input
               type="file"
-              name="image"
-              id="image"
+              name="attachment"
+              id="attachment"
               accept="image/*"
               onChange={handleChange}
               style={{ display: 'none' }}
