@@ -1,3 +1,9 @@
+
+// 
+
+
+
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ToastContainer, toast } from 'react-toastify';
@@ -7,15 +13,16 @@ import {
   Button,
   Typography,
   TextField,
-  Radio,
-  RadioGroup,
+  Checkbox,
   FormControlLabel,
-  FormControl,
   InputAdornment,
   IconButton,
   Link,
   useMediaQuery,
-  Alert
+  Alert,
+  Paper,
+  Radio,
+  RadioGroup
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
@@ -24,7 +31,7 @@ import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
 import { useThemeContext } from '../../contexts/ThemeContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { loginUser } from '../../utils/authUtils';
-import LoaderComponent from '../../components/loaders/AdvancedLoaders'; 
+import LoaderComponent from '../../components/loaders/AdvancedLoaders';
 
 const greenPalette = {
   darkGreen: '#055519',
@@ -43,7 +50,7 @@ const LoginPage = () => {
   try {
     themeContext = useThemeContext();
   } catch (error) {
-    themeContext = { mode: 'dark', toggleTheme: () => {} };
+    themeContext = { mode: 'light', toggleTheme: () => {} };
   }
   
   try {
@@ -64,13 +71,29 @@ const LoginPage = () => {
   });
   
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  // Update body background color for dark mode
+  // Update body background color
   useEffect(() => {
-    document.body.style.backgroundColor = mode === 'dark' ? '#121212' : '#ffffff';
+    document.body.style.backgroundColor = mode === 'dark' ? '#121212' : '#f5f5f5';
   }, [mode]);
+
+  // Security: Disable password managers and clear sensitive data on unmount
+  useEffect(() => {
+    const passwordField = document.querySelector('input[name="password"]');
+    if (passwordField) {
+      passwordField.setAttribute('autocomplete', 'new-password');
+      passwordField.setAttribute('data-lpignore', 'true');
+      passwordField.setAttribute('data-form-type', 'other');
+    }
+    
+    return () => {
+      // Clear sensitive data on component unmount
+      setCredentials(prev => ({ ...prev, password: '' }));
+    };
+  }, []);
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -97,8 +120,23 @@ const LoginPage = () => {
     }
   };
 
+  const handleRoleChange = (e) => {
+    setCredentials({
+      ...credentials,
+      role: e.target.value
+    });
+    // Clear error when user changes role
+    if (error) {
+      setError('');
+    }
+  };
+
   const handleTogglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleRememberMeChange = (e) => {
+    setRememberMe(e.target.checked);
   };
 
   const handleSubmit = async (e) => {
@@ -191,7 +229,7 @@ const LoginPage = () => {
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: mode === 'dark' ? '#121212' : '#ffffff',
+        bgcolor: mode === 'dark' ? '#121212' : '#f5f5f5',
         color: mode === 'dark' ? '#ffffff' : '#000000',
       }}
     >
@@ -208,264 +246,261 @@ const LoginPage = () => {
         theme={mode === 'dark' ? 'dark' : 'light'}
       />
       
-      {/* Gray rectangle at the top */}
+      {/* Ash/Gray background at the top - more visible */}
       <Box
         sx={{
-          width: '100%',
-          bgcolor: mode === 'dark' ? '#1e1e1e' : '#e5e5e5',
-          height: { xs: '150px', sm: '200px', md: '40vh' },
-          position: 'relative',
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: '30%',
+          bgcolor: mode === 'dark' ? '#4a4a4a' : '#a0a0a0',
+          zIndex: 1
+        }}
+      />
+      
+      {/* Top right corner - ACMS badge and theme toggle with more rounded borders */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 20,
+          right: 20,
           display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'flex-start',
-          p: 2
+          alignItems: 'center',
+          gap: 2,
+          zIndex: 10
         }}
       >
-        {/* ACMS button and theme toggle in top right */}
-        <Box 
-          sx={{ 
-            display: 'flex',
-            alignItems: 'center',
-            gap: 2
+        <Typography
+          variant="h6"
+          sx={{
+            color: '#fff',
+            bgcolor: greenPalette.mediumGreen,
+            px: 2,
+            py: 1,
+            borderRadius: '20px',
+            fontWeight: 'bold',
+            boxShadow: '0px 2px 4px rgba(0,0,0,0.1)',
+            fontSize: '0.9rem'
           }}
         >
-          <Typography
-            variant="h6"
-            sx={{
-              color: '#fff',
-              bgcolor: greenPalette.mediumGreen,
-              px: 2,
-              py: 1,
-              borderRadius: '4px',
-              fontWeight: 'bold',
-              boxShadow: '0px 2px 4px rgba(0,0,0,0.1)'
-            }}
-          >
-            ACMS
-          </Typography>
-          
-          <IconButton
-            onClick={toggleTheme}
-            sx={{ 
-              color: mode === 'dark' ? '#ffffff' : '#000000',
-              bgcolor: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-              '&:hover': {
-                bgcolor: mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'
-              }
-            }}
-          >
-            {mode === 'dark' ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
-          </IconButton>
-        </Box>
+          ACMS
+        </Typography>
+        
+        <IconButton
+          onClick={toggleTheme}
+          sx={{ 
+            color: mode === 'dark' ? '#ffffff' : '#666666',
+            bgcolor: mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)',
+            '&:hover': {
+              bgcolor: mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)'
+            }
+          }}
+        >
+          {mode === 'dark' ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
+        </IconButton>
       </Box>
 
-      {/* Centered container for login boxes */}
+      {/* Main centered container with everything in one box */}
       <Box
         sx={{
           position: 'absolute',
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          width: { xs: '95%', sm: '80%', md: '750px' },
-          height: { xs: 'auto', md: 'auto' },
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
+          width: { xs: '90%', sm: '500px', md: '650px' },
+          zIndex: 5
         }}
       >
-        {/* Green box is the bottom layer with longer height */}
-        <Box
+        {/* Single Paper container for everything */}
+        <Paper
+          elevation={3}
           sx={{
-            position: 'relative',
-            width: { xs: '100%', md: '100%' },
-            height: { xs: 'auto', md: '500px' },
-            borderRadius: '4px',
-            boxShadow: '0 3px 10px rgba(0,0,0,0.15)',
-            overflow: 'hidden',
+            width: '100%',
+            bgcolor: mode === 'dark' ? '#1e1e1e' : '#ffffff',
+            borderRadius: '8px',
+            p: { xs: 3, sm: 4 },
             display: 'flex',
-            flexDirection: { xs: 'column', md: 'row' }
+            flexDirection: { xs: 'column', sm: 'row' },
+            alignItems: 'center',
+            gap: { xs: 3, sm: 10 },
+            border: mode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.05)',
           }}
         >
-          {/* Green section (bigger than the login form) */}
+          {/* ACMS Logo on the left side - more compact */}
           <Box
             sx={{
-              width: { xs: '100%', md: '55%' },
-              height: { xs: '180px', md: '100%' },
               display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
               alignItems: 'center',
-              position: 'relative',
-              // Using exact linear gradient with colors from the palette
-              background: `linear-gradient(135deg, 
-                ${greenPalette.darkGreen} 0%, 
-                ${greenPalette.mediumDarkGreen} 25%, 
-                ${greenPalette.mediumGreen} 35%, 
-                ${greenPalette.green} 45%, 
-                ${greenPalette.lightGreen} 60%, 
-                ${greenPalette.lightestGreen} 85%)`,
+              justifyContent: 'center',
+              minWidth: { xs: 'auto', sm: '60px', md: '70px' },
+              flexShrink: 0
             }}
           >
             <Typography
-              variant="h2"
-              component="h1"
+              variant="h3"
               sx={{
+                fontSize: { xs: '1.4rem', sm: '1.6rem', md: '2rem' },
                 fontWeight: 'bold',
-                color: 'white',
-                textAlign: 'center',
-                fontSize: { xs: '1.8rem', sm: '2.2rem', md: '2.5rem' },
-                mb: { xs: 2, md: 0 }
+                color: greenPalette.mediumGreen,
+                opacity: 0.9,
+                letterSpacing: '0.0em',
+                lineHeight: 1,
+                fontFamily: 'Arial, sans-serif',
+                textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
+                borderRadius: '6px',
+                padding: '2px 4px'
               }}
             >
-              WELCOME!
+              ACMS
             </Typography>
-            
-            {/* Footer in the green section */}
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: 16,
-                left: 16,
-                right: 16,
-                display: 'flex',
-                justifyContent: 'space-between',
-                color: 'rgba(255, 255, 255, 0.8)',
-                fontSize: '0.8rem'
-              }}
-            >
-              <Typography variant="body2">All rights reserved</Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography variant="body2">© Akuafo Hall 2025</Typography>
-              </Box>
-            </Box>
           </Box>
-          
-          {/* White overlay area for login form - positioned slightly over green section */}
+
+          {/* Right side - Login form */}
           <Box
             sx={{
-              position: { xs: 'relative', md: 'absolute' },
-              top: { xs: 'auto', md: '50%' },
-              right: { xs: 'auto', md: '0' },
-              transform: { xs: 'none', md: 'translateY(-50%)' },
-              width: { xs: '100%', md: '55%' },
-              bgcolor: mode === 'dark' ? '#242424' : '#ffffff',
+              flex: 1,
+              width: '100%',
+              maxWidth: { xs: '100%', sm: '350px' },
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              padding: { xs: '1.5rem', sm: '2rem' },
-              boxShadow: '0 3px 10px rgba(0,0,0,0.1)',
-              borderRadius: '4px',
-              border: mode === 'dark' ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
-              height: { xs: 'auto', md: '400px' },
-              zIndex: 2
+              alignItems: 'center'
             }}
           >
-            <Typography 
-              sx={{ 
-                mb: 3, 
+            {/* Welcome text */}
+            <Typography
+              variant="h4"
+              sx={{
+                mb: 1,
+                fontWeight: 'bold',
+                color: mode === 'dark' ? '#ffffff' : '#333333',
                 textAlign: 'center',
-                color: mode === 'dark' ? '#e0e0e0' : '#4d5b42',
-                fontWeight: 'normal',
-                fontSize: { xs: '1rem', md: '1.1rem' }
+                fontSize: { xs: '1.3rem', sm: '1.5rem' }
+              }}
+            >
+              Welcome Back!
+            </Typography>
+            
+            <Typography
+              variant="body1"
+              sx={{
+                mb: 3,
+                color: mode === 'dark' ? '#cccccc' : '#666666',
+                textAlign: 'center',
+                fontSize: '0.9rem'
               }}
             >
               Enter details to sign in
             </Typography>
-            
+
+            {/* Role Selection */}
+            <Box sx={{ mb: 3, width: '100%' }}>
+              <RadioGroup
+                row
+                value={credentials.role}
+                onChange={handleRoleChange}
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: { xs: 1, sm: 2 }
+                }}
+              >
+                <FormControlLabel
+                  value="Admin"
+                  control={
+                    <Radio
+                      sx={{
+                        color: mode === 'dark' ? '#cccccc' : '#666666',
+                        '&.Mui-checked': {
+                          color: greenPalette.mediumGreen
+                        },
+                        '& .MuiSvgIcon-root': {
+                          fontSize: '1.1rem'
+                        }
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: mode === 'dark' ? '#cccccc' : '#666666',
+                        fontSize: '0.85rem'
+                      }}
+                    >
+                      Admin
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  value="Student"
+                  control={
+                    <Radio
+                      sx={{
+                        color: mode === 'dark' ? '#cccccc' : '#666666',
+                        '&.Mui-checked': {
+                          color: greenPalette.mediumGreen
+                        },
+                        '& .MuiSvgIcon-root': {
+                          fontSize: '1.1rem'
+                        }
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: mode === 'dark' ? '#cccccc' : '#666666',
+                        fontSize: '0.85rem'
+                      }}
+                    >
+                      Student
+                    </Typography>
+                  }
+                />
+                <FormControlLabel
+                  value="Artisan"
+                  control={
+                    <Radio
+                      sx={{
+                        color: mode === 'dark' ? '#cccccc' : '#666666',
+                        '&.Mui-checked': {
+                          color: greenPalette.mediumGreen
+                        },
+                        '& .MuiSvgIcon-root': {
+                          fontSize: '1.1rem'
+                        }
+                      }}
+                    />
+                  }
+                  label={
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: mode === 'dark' ? '#cccccc' : '#666666',
+                        fontSize: '0.85rem'
+                      }}
+                    >
+                      Artisan
+                    </Typography>
+                  }
+                />
+              </RadioGroup>
+            </Box>
+
             {error && (
-              <Alert severity="error" sx={{ mb: 2, width: '100%', maxWidth: '300px' }}>
+              <Alert severity="error" sx={{ mb: 2, width: '100%' }}>
                 {error}
               </Alert>
             )}
-            
-            <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '300px' }}>
-              {/* Role selection */}
-              <FormControl component="fieldset" sx={{ width: '100%', mb: 2 }}>
-                <RadioGroup
-                  row
-                  name="role"
-                  value={credentials.role}
-                  onChange={handleChange}
-                  sx={{ 
-                    justifyContent: 'center',
-                    '& .MuiFormControlLabel-root': { 
-                      mx: { xs: 0.5, sm: 1 },
-                    }
-                  }}
-                >
-                  <FormControlLabel 
-                    value="Admin" 
-                    control={
-                      <Radio 
-                        sx={{
-                          color: mode === 'dark' ? '#9e9e9e' : '#9e9e9e',
-                          padding: '4px',
-                          '&.Mui-checked': {
-                            color: mode === 'dark' ? greenPalette.lightGreen : greenPalette.green
-                          }
-                        }}
-                      />
-                    } 
-                    label="Admin" 
-                    sx={{ 
-                      '& .MuiTypography-root': { 
-                        color: credentials.role === 'Admin' 
-                          ? (mode === 'dark' ? greenPalette.lightGreen : greenPalette.green) 
-                          : (mode === 'dark' ? '#bbbbbb' : '#666666'),
-                        fontSize: '0.9rem'
-                      }
-                    }}
-                  />
-                  <FormControlLabel 
-                    value="Student" 
-                    control={
-                      <Radio 
-                        sx={{
-                          color: mode === 'dark' ? '#9e9e9e' : '#9e9e9e',
-                          padding: '4px',
-                          '&.Mui-checked': {
-                            color: mode === 'dark' ? greenPalette.lightGreen : greenPalette.green
-                          }
-                        }}
-                      />
-                    } 
-                    label="Student" 
-                    sx={{ 
-                      '& .MuiTypography-root': { 
-                        color: credentials.role === 'Student' 
-                          ? (mode === 'dark' ? greenPalette.lightGreen : greenPalette.green) 
-                          : (mode === 'dark' ? '#bbbbbb' : '#666666'),
-                        fontSize: '0.9rem'
-                      }
-                    }}
-                  />
-                  <FormControlLabel 
-                    value="Artisan" 
-                    control={
-                      <Radio 
-                        sx={{
-                          color: mode === 'dark' ? '#9e9e9e' : '#9e9e9e',
-                          padding: '4px',
-                          '&.Mui-checked': {
-                            color: mode === 'dark' ? greenPalette.lightGreen : greenPalette.green
-                          }
-                        }}
-                      />
-                    } 
-                    label="Artisan" 
-                    sx={{ 
-                      '& .MuiTypography-root': { 
-                        color: credentials.role === 'Artisan' 
-                          ? (mode === 'dark' ? greenPalette.lightGreen : greenPalette.green) 
-                          : (mode === 'dark' ? '#bbbbbb' : '#666666'),
-                        fontSize: '0.9rem'
-                      }
-                    }}
-                  />
-                </RadioGroup>
-              </FormControl>
-              
+
+            <form 
+              onSubmit={handleSubmit} 
+              style={{ width: '100%' }}
+              autoComplete="off"
+              spellCheck="false"
+            >
               {/* Email field */}
               <TextField
                 fullWidth
@@ -476,17 +511,18 @@ const LoginPage = () => {
                 value={credentials.email}
                 onChange={handleChange}
                 required
+                autoComplete="username"
                 sx={{ 
                   mb: 2,
                   '& .MuiOutlinedInput-root': {
-                    borderRadius: '4px',
-                    bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#ffffff'
+                    borderRadius: '8px',
+                    bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f8f9fa'
                   },
                   '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'
+                    borderColor: mode === 'dark' ? 'rgba(255,255,255,0.2)' : '#e0e0e0'
                   },
                   '& .MuiOutlinedInput-input': {
-                    padding: '10px 14px',
+                    padding: '12px',
                     color: mode === 'dark' ? '#ffffff' : 'inherit'
                   },
                   '& .MuiOutlinedInput-input::placeholder': {
@@ -495,8 +531,8 @@ const LoginPage = () => {
                   },
                 }}
               />
-              
-              {/* Password field */}
+
+              {/* Password field - SECURED */}
               <TextField
                 fullWidth
                 placeholder="Password"
@@ -506,17 +542,24 @@ const LoginPage = () => {
                 value={credentials.password}
                 onChange={handleChange}
                 required
+                autoComplete="current-password"
+                inputProps={{
+                  autoComplete: "current-password",
+                  'data-lpignore': 'true',
+                  'data-form-type': 'other',
+                  spellCheck: 'false'
+                }}
                 sx={{ 
-                  mb: 2.5,
+                  mb: 2,
                   '& .MuiOutlinedInput-root': {
-                    borderRadius: '4px',
-                    bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#ffffff'
+                    borderRadius: '8px',
+                    bgcolor: mode === 'dark' ? 'rgba(255,255,255,0.05)' : '#f8f9fa'
                   },
                   '& .MuiOutlinedInput-notchedOutline': {
-                    borderColor: mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)'
+                    borderColor: mode === 'dark' ? 'rgba(255,255,255,0.2)' : '#e0e0e0'
                   },
                   '& .MuiOutlinedInput-input': {
-                    padding: '10px 14px',
+                    padding: '12px',
                     color: mode === 'dark' ? '#ffffff' : 'inherit'
                   },
                   '& .MuiOutlinedInput-input::placeholder': {
@@ -530,6 +573,7 @@ const LoginPage = () => {
                       <IconButton 
                         onClick={handleTogglePasswordVisibility} 
                         edge="end"
+                        tabIndex={-1}
                         sx={{ color: mode === 'dark' ? '#cccccc' : 'rgba(0,0,0,0.5)' }}
                       >
                         {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
@@ -538,7 +582,35 @@ const LoginPage = () => {
                   )
                 }}
               />
-              
+
+              {/* Remember Me checkbox */}
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={rememberMe}
+                    onChange={handleRememberMeChange}
+                    sx={{
+                      color: mode === 'dark' ? '#cccccc' : '#666666',
+                      '&.Mui-checked': {
+                        color: greenPalette.mediumGreen
+                      }
+                    }}
+                  />
+                }
+                label={
+                  <Typography 
+                    variant="body2" 
+                    sx={{ 
+                      color: mode === 'dark' ? '#cccccc' : '#666666',
+                      fontSize: '0.85rem'
+                    }}
+                  >
+                    Remember Me
+                  </Typography>
+                }
+                sx={{ mb: 2, alignSelf: 'flex-start' }}
+              />
+
               {/* Sign In button */}
               <Button
                 type="submit"
@@ -546,38 +618,52 @@ const LoginPage = () => {
                 variant="contained"
                 disabled={loading}
                 sx={{ 
-                  py: { xs: 1, md: 1.2 }, 
+                  py: 1.2, 
                   bgcolor: greenPalette.mediumGreen,
                   '&:hover': {
                     bgcolor: greenPalette.mediumDarkGreen
                   },
                   mb: 2,
                   textTransform: 'none',
-                  borderRadius: '4px',
-                  fontWeight: 'normal',
-                  fontSize: '1rem',
-                  boxShadow: 'none'
+                  borderRadius: '8px',
+                  fontWeight: 'bold',
+                  fontSize: '0.95rem',
+                  boxShadow: '0 4px 12px rgba(45, 169, 75, 0.3)'
                 }}
               >
                 Sign In
               </Button>
-              
+
               {/* No Account text */}
-              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1.5 }}>
-                <Typography variant="body2" sx={{ mr: 1, color: mode === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)' }}>
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    mr: 1, 
+                    color: mode === 'dark' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.7)',
+                    fontSize: '0.85rem'
+                  }}
+                >
                   No Account?
                 </Typography>
                 <Link 
                   href="/signup" 
                   underline="hover" 
-                  sx={{ color: mode === 'dark' ? greenPalette.lightGreen : greenPalette.mediumGreen, fontWeight: 500 }}
+                  sx={{ 
+                    color: greenPalette.mediumGreen, 
+                    fontWeight: 600,
+                    fontSize: '0.85rem',
+                    '&:hover': {
+                      color: greenPalette.mediumDarkGreen
+                    }
+                  }}
                 >
                   Sign Up
                 </Link>
               </Box>
             </form>
           </Box>
-        </Box>
+        </Paper>
       </Box>
     </Box>
   );

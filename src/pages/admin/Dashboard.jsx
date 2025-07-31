@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+'import React, { useState, useEffect } from 'react';
 import { Box, Grid, useTheme, Typography } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useThemeContext } from '../../contexts/ThemeContext';
@@ -6,6 +7,7 @@ import NavBar from '../../components/Reusable/NavBar';
 import Sidebar from '../../components/Reusable/Sidebar';
 import DashboardCard from '../../components/Reusable/DashboardCard';
 import Notification from '../../components/Reusable/Notification';
+
 
 
 // Icons for the cards
@@ -168,7 +170,7 @@ const Dashboard = () => {
 
   return (
     <Box display="flex" minHeight="100vh">
-      <Sidebar role="admin" />
+      <Sidebar />
       <Box flex={1} display="flex" flexDirection="column" sx={{ minWidth: 0 }}>
         <NavBar notificationCount={5} />
         
