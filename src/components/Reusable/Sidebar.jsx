@@ -28,8 +28,8 @@ import { useAuth } from "../../contexts/AuthContext";
 const sidebarComponents = {//sidebar components based on user
   student: [
     {name: "Dashboard", icon: <DashboardIcon />, path: "/student/dashboard"},
-    {name: "LComplaint", icon: <ReportIcon />, path: "/student/lcomplaint"},
-    {name: "Complaint", icon: <ReportIcon />, path: "/student/complaint"},
+    {name: "Lodge Complaint", icon: <ReportIcon />, path: "/student/lodge-complaint"},
+    {name: "My Complaints", icon: <ReportIcon />, path: "/student/complaints"},
     {name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/student/notifications"},
     {name: "Profile", icon: <PersonIcon />, path: "/student/profile"},
   ],

@@ -21,6 +21,33 @@ const StudentRoutes = () => [
         <LodgeComplaint />
       </ProtectedRoute>
     }
+  />,
+  <Route
+    key="student-complaints"
+    path="/student/complaints"
+    element={
+      <ProtectedRoute allowedRoles={['student']}>
+        <div>My Complaints Page - Coming Soon</div>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="student-notifications"
+    path="/student/notifications"
+    element={
+      <ProtectedRoute allowedRoles={['student']}>
+        <div>Notifications Page - Coming Soon</div>
+      </ProtectedRoute>
+    }
+  />,
+  <Route
+    key="student-profile"
+    path="/student/profile"
+    element={
+      <ProtectedRoute allowedRoles={['student']}>
+        <div>Profile Page - Coming Soon</div>
+      </ProtectedRoute>
+    }
   />
 ];
 

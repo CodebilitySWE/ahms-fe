@@ -183,7 +183,9 @@ export default function LComplaint() {
             fullWidth
             required
             value={formData.location}
-            onChange={handleChange}
+            InputProps={{
+              readOnly: true,
+            }}
             sx={{ gridColumn: 'span 12' }}
           />
 
