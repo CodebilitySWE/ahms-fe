@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect } from 'react';
 import { Box, Grid, useTheme, Typography } from '@mui/material';
 import { toast } from 'react-toastify';
 import { useThemeContext } from '../../contexts/ThemeContext';
@@ -7,6 +8,7 @@ import NavBar from '../../components/Reusable/NavBar';
 import Sidebar from '../../components/Reusable/Sidebar';
 import DashboardCard from '../../components/Reusable/DashboardCard';
 import Notification from '../../components/Reusable/Notification';
+
 
 
 
@@ -176,6 +178,7 @@ const Dashboard = () => {
         
         <Box component="main" sx={{ p: { xs: 2, sm: 3 }, flexGrow: 1, backgroundColor: mode === 'dark' ? '#1a1a1a' : '#f5f5f5' }}>
           {/* Dashboard Statistics Cards */}
+          
           <Box display="flex" flexDirection="row" gap={3} mb={4} sx={{ ml: { xs: 0, md: '260px' } }}>
             {getCardData().map((cardData) => (
               <DashboardCard
@@ -186,6 +189,12 @@ const Dashboard = () => {
               />
             ))}
           </Box>
+          <Box display="flex" justifyContent="flex-end" sx={{ ml: { xs: 0, md: '260px' } }}>
+           <Box sx={{ width: '100%', maxWidth: 400 }}>
+            <Notification />
+           </Box>
+         </Box>
+
 
 
           {/* Error state display */}
