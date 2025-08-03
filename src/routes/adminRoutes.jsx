@@ -2,7 +2,7 @@ import { Route } from 'react-router-dom';
 import Dashboard from '../pages/admin/Dashboard';
 import Complaints from '../pages/admin/Complaints';
 import Notifications from '../pages/admin/Notifications';
-import Profile from '../pages/admin/Profile';
+import Profile from '../pages/Shared/Profile';
 import Statistics from '../pages/admin/Statistics';
 import ManageUsers from '../pages/admin/ManageUsers';
 import ProtectedRoute from './ProtectedRoutes';
