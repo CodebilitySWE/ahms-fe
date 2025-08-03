@@ -18,7 +18,7 @@ import { Add } from "@mui/icons-material";
 
 import Sidebar from "../../components/Reusable/Sidebar";
 import Navbar from "../../components/Reusable/NavBar";
-import { fetchUsers, createUser } from "../../utils/userUtils";
+import { fetchUsers, createUser, fetchUserById } from "../../utils/userUtils";
 
 const ManageUsers = () => {
   const [students, setStudents] = useState([]);
@@ -36,6 +36,10 @@ const ManageUsers = () => {
   const [studentPage, setStudentPage] = useState(1);
   const [artisanPage, setArtisanPage] = useState(1);
   const usersPerPage = 5;
+
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [viewLoading, setViewLoading] = useState(false);
 
   useEffect(() => {
     const fetchAndSetUsers = async () => {
@@ -69,13 +73,39 @@ const ManageUsers = () => {
       setNewUser({ name: "", email: "", work_type_id: "" });
       setPhotoFile(null);
       setError("");
-      window.location.reload(); // Auto-refresh page
+      window.location.reload();
     } catch (error) {
       setError(error.message || "Failed to add artisan");
     } finally {
       setAdding(false);
     }
   };
+
+  const handleViewUser = async (userId, role) => {
+  try {
+    setViewLoading(true);
+
+    let user = null;
+
+    if (role === "student") {
+      user = students.find((s) => s.id === userId);
+    } else if (role === "artisan") {
+      user = artisans.find((a) => a.id === userId);
+    }
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    setSelectedUser({ ...user, role });
+    setViewModalOpen(true);
+  } catch (error) {
+    setError("Failed to load user details");
+  } finally {
+    setViewLoading(false);
+  }
+};
+
 
   const renderAddModal = () => (
     <Modal open={addModalOpen} onClose={() => setAddModalOpen(false)}>
@@ -179,7 +209,9 @@ const ManageUsers = () => {
                   <TableCell>{student.room_number || "-"}</TableCell>
                   <TableCell>{student.student_id || "-"}</TableCell>
                   <TableCell>
-                    <Button variant="outlined" size="small">View</Button>
+                    <Button variant="outlined" size="small" onClick={() => handleViewUser(student.id, "student")}>
+                      View
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -259,7 +291,9 @@ const ManageUsers = () => {
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Button variant="outlined" size="small">View</Button>
+                    <Button variant="outlined" size="small" onClick={() => handleViewUser(artisan.id, "artisan")}>
+                      View
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
@@ -336,6 +370,79 @@ const ManageUsers = () => {
           )}
         </Box>
       </Box>
+
+      {/* View User Modal */}
+<Modal open={viewModalOpen} onClose={() => setViewModalOpen(false)}>
+  <Box
+    sx={{
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      width: { xs: 300, sm: 400, md: 500 },
+      bgcolor: "background.paper",
+      boxShadow: 24,
+      p: 4,
+      borderRadius: 2,
+    }}
+  >
+    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      <Typography variant="h6">User Details</Typography>
+      <Button
+        onClick={() => setViewModalOpen(false)}
+        size="small"
+        sx={{ minWidth: "30px", color: "#999" }}
+      >
+        ✕
+      </Button>
+    </Box>
+
+    {viewLoading ? (
+      <Box display="flex" justifyContent="center">
+        <CircularProgress />
+      </Box>
+    ) : selectedUser ? (
+      <Box display="flex" flexDirection="column" gap={1}>
+        <Typography><strong>Name:</strong> {selectedUser.name}</Typography>
+        {selectedUser.role === "student" && (
+  <Typography><strong>Programme:</strong> {selectedUser.programme}</Typography>
+)}
+
+
+        {selectedUser.phone && (
+          <Typography><strong>Phone:</strong> {selectedUser.phone}</Typography>
+        )}
+
+        {selectedUser.role === "student" ? (
+          <>
+            <Typography><strong>Student ID:</strong> {selectedUser.student_id || "-"}</Typography>
+            <Typography><strong>Room No:</strong> {selectedUser.room_number || "-"}</Typography>
+            <Typography><strong>Block:</strong> {selectedUser.block || "-"}</Typography>
+          </>
+        ) : (
+          <>
+            <Typography><strong>Work Type:</strong> {selectedUser.work_type || "-"}</Typography>
+           
+            
+          </>
+        )}
+
+        <Box mt={3} display="flex" justifyContent="flex-end">
+          <Button
+            variant="contained"
+            onClick={() => setViewModalOpen(false)}
+            sx={{ textTransform: "none" }}
+          >
+            Close
+          </Button>
+        </Box>
+      </Box>
+    ) : (
+      <Typography>No user selected.</Typography>
+    )}
+  </Box>
+</Modal>
+
     </Box>
   );
 };
