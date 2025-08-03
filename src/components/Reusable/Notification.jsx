@@ -40,10 +40,13 @@ const Notification = () => {
       sx={{
         width: {
           xs: "215px",
-          sm: "215",
-          md: 304,
+          sm: "215px",
+          md: "400px", // Increased from 304px to 400px for desktop
         },
-        minHeight: 425,
+        minHeight: {
+          xs: 425,
+          md: 500, // Increased from 425 to 500 for desktop
+        },
         border: 1,
         borderRadius: 4,
         padding: 2,
