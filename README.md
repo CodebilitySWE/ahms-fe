@@ -19,6 +19,6 @@ If you are developing a production application, we recommend using TypeScript an
 4. run the application with `yarn dev` or `yarn run`
 
 ## Things needed in .env
-- `BASE_API_URL=https://ahms-be-obre.onrender.com/`
+- `BASE_API_URL=`
 
 ## Good luck Team Codebility -------> JOE
