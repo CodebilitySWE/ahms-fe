@@ -10,7 +10,7 @@ import AdminRoutes from './routes/adminRoutes';
 import LoginPage from './pages/auth/LoginPage';
 import { setupAuthInterceptors } from './utils/authUtils';
 import SignupPage from './pages/auth/SignupPage';
-
+import Notification from './components/Reusable/Notification'
 const NotFoundPage = () => <div>Page not found</div>;
 const UnauthorizedPage = () => <div>Unauthorized access</div>;
 
@@ -21,7 +21,7 @@ const AppRoutes = () => {
 
   return (
     <Routes>
-      {/* Public routes */}
+      Public routes
       {AuthRoutes()}
       
       {/* Protected routes */}
@@ -32,6 +32,7 @@ const AppRoutes = () => {
       {/* Special routes */}
       <Route path="/unauthorized" element={<UnauthorizedPage />} />
       <Route path="/" element={<LoginPage />} />
+      <Route path="/notification" element={<Notification />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
