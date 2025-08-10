@@ -9,6 +9,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import WorkIcon from '@mui/icons-material/Work';
 import ReportIcon from '@mui/icons-material/Report';
 import BarChartIcon from '@mui/icons-material/BarChart';
+import OpenComplaints from '../../components/Reusable/OpenComplaints';
 
 const artisanNavItems = [
   { label: 'Dashboard', icon: <DashboardIcon />, route: '/artisan/dashboard' },
@@ -25,6 +26,7 @@ const Dashboard = () => {
       <Sidebar />
       <Box flex={1} display="flex" flexDirection="column" sx={{ minWidth: 0 }}>
         <NavBar userType="artisan" pageTitle="Dashboard" />
+        <OpenComplaints />
       </Box>
     </Box>
   );
