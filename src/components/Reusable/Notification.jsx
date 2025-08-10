@@ -10,7 +10,31 @@ import { useEffect, useState } from "react";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ClearIcon from "@mui/icons-material/Clear";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
-import { fetchNotifications } from "../../utils/NotificationFunction.js";
+
+const fetchNotifications = async (token) => {
+  if (!token) {
+    throw new Error("No auth token provided.");
+  }
+
+  const API_BASE_URL = "https://ahms-be-obre.onrender.com";
+
+  const response = await fetch(`${API_BASE_URL}/api/admin/dashboard/notifications?limit=5`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || !data.success) {
+    throw new Error(data.message || "Failed to fetch notifications");
+  }
+
+  const notifications = data.data || [];
+  return notifications.slice(0, 5);
+};
+
 
 const Notification = () => {
   const [notifications, setNotifications] = useState([]);
