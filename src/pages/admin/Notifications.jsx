@@ -15,19 +15,22 @@ import { useEffect, useState } from 'react';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import ClearIcon from '@mui/icons-material/Clear';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
 import { formatDistanceToNow } from 'date-fns';
 
-const API_BASE_URL = "https://ahms-be-obre.onrender.com";
- const token = localStorage.getItem("authToken");
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const token = localStorage.getItem("authToken");
+ const limit = 5;
 
-const fetchNotifications = async (token) => {
+
+const fetchNotifications = async (token, offset = 0) => {
   if (!token) {
     throw new Error("No auth token provided.");
   }
 
 
-  const response = await fetch(`${API_BASE_URL}/api/notifications?limit=5`, {
+  const response = await fetch(`${API_BASE_URL}/api/notifications?offset=${offset}&limit=${limit}`, {
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
@@ -48,18 +51,35 @@ const fetchNotifications = async (token) => {
 const Notification = () => {
   const [notifications, setNotifications] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
+  const [offset, setOffset] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+
 
   useEffect(() => {
     
-   
-    
-    
-    fetchNotifications(token)
-      .then(setNotifications)
-      .catch((err) => {
-        console.error("Error fetching notifications:", err.message);
-      });
-  }, []);
+    fetchNotifications(token, 0)
+      .then((newData) => {
+      setNotifications(newData);
+      setHasMore(newData.length === limit); // if less than limit, no more pages
+    })
+    .catch((err) => console.error("Error fetching notifications:", err.message));
+}, []);
+
+
+  const handleLoadMore = () => {
+  const newOffset = offset + limit;
+  fetchNotifications(token, newOffset)
+    .then((newData) => {
+      if (newData.length > 0) {
+        setNotifications((prev) => [...prev, ...newData]);
+        setOffset(newOffset);
+        setHasMore(newData.length === limit);
+      } else {
+        setHasMore(false);
+      }
+    })
+    .catch((err) => console.error("Error loading more:", err.message));
+};
 
   const handleAccordionToggle = (id) => {
     setExpandedId(expandedId === id ? null : id);
@@ -116,7 +136,7 @@ const Notification = () => {
   return (
     <Box
       sx={{
-        width: { xs: '100%', sm: '100%', md: 740 },
+        width: { xs: '80%', sm: '80%', md: 900 },
         minHeight: 425,
         border: 1,
         borderRadius: 4,
@@ -124,8 +144,10 @@ const Notification = () => {
         boxShadow: '0px 2px 3px rgba(0, 0, 0, 0.2)',
         borderColor: '#F5F5F5',
         backgroundColor: 'white',
-      }}
-    >
+        display: 'flex',
+        flexDirection: 'column',
+      }}>
+      
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Typography
           variant="h6"
@@ -150,7 +172,7 @@ const Notification = () => {
           </Button>
         )}
       </Box>
-
+      
       {notifications.length === 0 ? (
         <Typography sx={{ textAlign: "center", color: "gray", fontSize: 18 }}>
           No notifications to show
@@ -164,14 +186,12 @@ const Notification = () => {
             : formatDistanceToNow(new Date(msg.created_at), { addSuffix: true });
 
           return (
-            <Box key={msg.id}>
-              <Accordion
+              <Accordion key={msg.id}
                 expanded={expandedId === msg.id}
                 onChange={() => handleAccordionToggle(msg.id)}
                 disableGutters
                 sx={{
-                  backgroundColor: msg.is_read ? '#fff' : '#f9f9f9',
-                  borderRadius: 1,
+                  backgroundColor: msg.is_read ? '#fff' : '#f9f9f9', width: '100%',
                 }}
               >
                 <AccordionSummary
@@ -181,13 +201,23 @@ const Notification = () => {
                     alignItems: "center",
                     py: 1,
                     px: 1,
+                    width: '100%',
                     backgroundColor: "#fff",
                     "& .MuiAccordionSummary-content": {
                       alignItems: "center",
                     },
                   }}
                 >
-                  
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(msg.id, localStorage.getItem("authToken"));
+                    }}
+                    sx={{ mr: 1 }}
+                  >
+                    <ClearIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
 
                   <Stack direction="row" alignItems="center" spacing={1}>
                     {getStatusIcon(msg.status)}
@@ -205,16 +235,7 @@ const Notification = () => {
                       </Typography>
                     </Stack>
                   </Stack>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(msg.id, localStorage.getItem("authToken"));
-                    }}
-                    sx={{ mr: 1 , marginLeft: '350px'}}
-                  >
-                    <ClearIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
+                  
                 </AccordionSummary>
                 
                 <AccordionDetails sx={{ px: 2, py: 1 }}>
@@ -226,53 +247,60 @@ const Notification = () => {
                     {new Date(msg.created_at).toLocaleString()}
                   </Typography>
                 </AccordionDetails>
+                
               </Accordion>
 
-              <Box
-                sx={{
-                  width: "100%",
-                  height: "1px",
-                  backgroundColor: "#D9D9D9",
-                  my: 1,
-                }}
-              />
+             
               
-            </Box>
           );
         })
       )}
+
+      {notifications.length > 0 && hasMore && (
+        <Box display="flex" justifyContent="center" mt={2}>
+          <Button
+            variant="outlined"
+            endIcon={<ExpandMoreIcon />}
+            onClick={handleLoadMore}
+            sx={{
+              textTransform: "none",
+              fontWeight: "bold",
+              color: "#44577C",
+              borderRadius: 3
+            }}
+          >
+            Load More
+          </Button>
+        </Box>
+      )}
+      
     </Box>
-  );
+
+  )
 };
 
 function Notifications() {
   const { mode } = useThemeContext();
 
   return (
-    <Box display="flex" minHeight="100vh">
+    <Box display="flex" minHeight="100vh" flex-direction="row" sx={{ backgroundColor: mode === 'dark' ? '#121212' : '#f5f5f5' }}>
       <Sidebar />
       <Box flex={1} display="flex" flexDirection="column" sx={{ minWidth: 400 }}>
         <NavBar notificationCount={5} />
         <Box
-          component="main"
           sx={{
-            p: { xs: 2, sm: 3 },
-            flexGrow: 1,
+            p: { xs: 0, sm: 2, md: 4 },
             backgroundColor: mode === 'dark' ? '#1a1a1a' : '#f5f5f5',
+            Width: '100%',
+            minHeight: 'calc(100vh - 64px)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            marginLeft: { xs: 0, sm: "250px", md: '300px' },
           }}
         >
-          <Box
-            display="flex"
-            justifyContent="flex-start"
-            sx={{
-              ml: { xs: 0, md: '360px' },
-              px: { xs: 0, sm: 1 },
-            }}
-          >
-            <Box sx={{ width: '100%', maxWidth: 740 }}>
+
               <Notification />
-            </Box>
-          </Box>
         </Box>
       </Box>
     </Box>
