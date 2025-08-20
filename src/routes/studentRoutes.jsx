@@ -1,6 +1,7 @@
 import { Route } from 'react-router-dom';
 import Dashboard from '../pages/student/Dashboard';
 import LodgeComplaint from '../pages/student/LodgeComplaint'; // Make sure the file is named LComplaint.jsx
+import Profile from '../pages/Shared/Profile';
 import ProtectedRoute from './ProtectedRoutes';
 
 const StudentRoutes = () => [
@@ -45,7 +46,7 @@ const StudentRoutes = () => [
     path="/student/profile"
     element={
       <ProtectedRoute allowedRoles={['student']}>
-        <div>Profile Page - Coming Soon</div>
+        <Profile />
       </ProtectedRoute>
     }
   />
