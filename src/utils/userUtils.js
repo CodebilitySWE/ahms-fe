@@ -1,7 +1,18 @@
-
 import axios from "axios";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ahms-be-obre.onrender.com/api';
+// Remove trailing /api from base URL to prevent double /api/api
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ahms-be-obre.onrender.com';
+
+// Hardcoded work type options for dropdown
+export const WORK_TYPE_OPTIONS = [
+  { id: 1, name: "Plumbing" },
+  { id: 2, name: "Electrical" },
+  { id: 3, name: "Carpentry" },
+  { id: 4, name: "Masonry" },
+  { id: 5, name: "Painting" },
+  { id: 6, name: "Cleaning" },
+  { id: 7, name: "ICT" },
+];
 
 export const fetchUsers = async (token) => {
   try {
@@ -38,27 +49,33 @@ export const createUser = async (token, userData, photoFile) => {
   try {
     const headers = {
       Authorization: `Bearer ${token}`,
-      'Content-Type': photoFile ? 'multipart/form-data' : 'application/json',
+      // Content-Type will be set by Axios if FormData is used
     };
     const endpoint = `${API_BASE_URL}/api/auth/artisans`;
     const data = {
       name: userData.name,
       email: userData.email,
-      work_type_id: userData.work_type_id,
+      work_type_id: userData.work_type_id, // Submit ID, not name
     };
-    const formData = photoFile ? new FormData() : data;
+    let payload = data;
     if (photoFile) {
-      Object.keys(data).forEach((key) => formData.append(key, data[key]));
-      formData.append('profile_picture', photoFile);
+      payload = new FormData();
+      Object.keys(data).forEach((key) => payload.append(key, data[key]));
+      payload.append('profile_picture', photoFile);
     }
-    const response = await axios.post(endpoint, formData, { headers });
+    const response = await axios.post(endpoint, payload, { headers });
     return response.data;
   } catch (error) {
+    if (error.response) {
+      console.error("Backend error response:", error.response.data);
+      throw new Error(error.response.data.message || 'Failed to create artisan');
+    }
     console.error("Error creating artisan:", error);
     throw error;
   }
 };
 
+// Optionally fetch work types from API if available
 export const fetchWorkTypes = async (token) => {
   try {
     const headers = { Authorization: `Bearer ${token}` };

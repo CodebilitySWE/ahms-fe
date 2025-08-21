@@ -13,12 +13,16 @@ import {
   Modal,
   TextField,
   Alert,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
 } from "@mui/material";
 import { Add } from "@mui/icons-material";
 
 import Sidebar from "../../components/Reusable/Sidebar";
 import Navbar from "../../components/Reusable/NavBar";
-import { fetchUsers, createUser, fetchUserById } from "../../utils/userUtils";
+import { fetchUsers, createUser, fetchUserById, WORK_TYPE_OPTIONS } from "../../utils/userUtils";
 
 const ManageUsers = () => {
   const [students, setStudents] = useState([]);
@@ -30,7 +34,7 @@ const ManageUsers = () => {
     email: "",
     work_type_id: "",
   });
-  const [photoFile, setPhotoFile] = useState(null);
+  // No more photoFile state
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(false);
   const [studentPage, setStudentPage] = useState(1);
@@ -47,8 +51,6 @@ const ManageUsers = () => {
         const token = localStorage.getItem("authToken");
         if (!token) throw new Error("No authentication token found");
         const { students, artisans } = await fetchUsers(token);
-        console.log("Fetched students:", students.map(s => s.id));
-        console.log("Fetched artisans:", artisans.map(a => a.id));
         setStudents(students);
         setArtisans(artisans);
       } catch (error) {
@@ -67,11 +69,10 @@ const ManageUsers = () => {
       if (!newUser.name || !newUser.email || !newUser.work_type_id) {
         throw new Error("Please fill in all required fields");
       }
-      const user = await createUser(token, newUser, photoFile);
+      const user = await createUser(token, newUser, null); // null for photoFile
       setArtisans((prev) => [...prev, user.artisan || user]);
       setAddModalOpen(false);
       setNewUser({ name: "", email: "", work_type_id: "" });
-      setPhotoFile(null);
       setError("");
       window.location.reload();
     } catch (error) {
@@ -82,30 +83,29 @@ const ManageUsers = () => {
   };
 
   const handleViewUser = async (userId, role) => {
-  try {
-    setViewLoading(true);
+    try {
+      setViewLoading(true);
 
-    let user = null;
+      let user = null;
 
-    if (role === "student") {
-      user = students.find((s) => s.id === userId);
-    } else if (role === "artisan") {
-      user = artisans.find((a) => a.id === userId);
+      if (role === "student") {
+        user = students.find((s) => s.id === userId);
+      } else if (role === "artisan") {
+        user = artisans.find((a) => a.id === userId);
+      }
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      setSelectedUser({ ...user, role });
+      setViewModalOpen(true);
+    } catch (error) {
+      setError("Failed to load user details");
+    } finally {
+      setViewLoading(false);
     }
-
-    if (!user) {
-      throw new Error("User not found");
-    }
-
-    setSelectedUser({ ...user, role });
-    setViewModalOpen(true);
-  } catch (error) {
-    setError("Failed to load user details");
-  } finally {
-    setViewLoading(false);
-  }
-};
-
+  };
 
   const renderAddModal = () => (
     <Modal open={addModalOpen} onClose={() => setAddModalOpen(false)}>
@@ -138,27 +138,21 @@ const ManageUsers = () => {
           margin="normal"
           required
         />
-        <TextField
-          label="Work Type ID"
-          value={newUser.work_type_id}
-          onChange={(e) => setNewUser({ ...newUser, work_type_id: e.target.value })}
-          fullWidth
-          margin="normal"
-          required
-        />
-        <Button
-          variant="contained"
-          component="label"
-          sx={{ mt: 2, backgroundColor: '#1976d2', '&:hover': { backgroundColor: '#1565c0' } }}
-        >
-          Upload Profile Picture
-          <input
-            type="file"
-            hidden
-            accept="image/*"
-            onChange={(e) => setPhotoFile(e.target.files[0])}
-          />
-        </Button>
+        <FormControl fullWidth margin="normal" required>
+          <InputLabel id="work-type-label">Work Type</InputLabel>
+          <Select
+            labelId="work-type-label"
+            label="Work Type"
+            value={newUser.work_type_id}
+            onChange={(e) => setNewUser({ ...newUser, work_type_id: e.target.value })}
+          >
+            {WORK_TYPE_OPTIONS.map(type => (
+              <MenuItem key={type.id} value={type.id}>
+                {type.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
         <Box mt={2}>
           <Button
             variant="contained"
@@ -274,7 +268,9 @@ const ManageUsers = () => {
                       {artisan.email}
                     </Typography>
                   </TableCell>
-                  <TableCell>{artisan.work_type || artisan.role || "-"}</TableCell>
+                  <TableCell>
+                    {WORK_TYPE_OPTIONS.find(type => type.id === artisan.work_type_id)?.name || artisan.work_type || "-"}
+                  </TableCell>
                   <TableCell>
                     <Typography
                       variant="caption"
@@ -372,77 +368,76 @@ const ManageUsers = () => {
       </Box>
 
       {/* View User Modal */}
-<Modal open={viewModalOpen} onClose={() => setViewModalOpen(false)}>
-  <Box
-    sx={{
-      position: "absolute",
-      top: "50%",
-      left: "50%",
-      transform: "translate(-50%, -50%)",
-      width: { xs: 300, sm: 400, md: 500 },
-      bgcolor: "background.paper",
-      boxShadow: 24,
-      p: 4,
-      borderRadius: 2,
-    }}
-  >
-    <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-      <Typography variant="h6">User Details</Typography>
-      <Button
-        onClick={() => setViewModalOpen(false)}
-        size="small"
-        sx={{ minWidth: "30px", color: "#999" }}
-      >
-        ✕
-      </Button>
-    </Box>
+      <Modal open={viewModalOpen} onClose={() => setViewModalOpen(false)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: { xs: 300, sm: 400, md: 500 },
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Typography variant="h6">User Details</Typography>
+            <Button
+              onClick={() => setViewModalOpen(false)}
+              size="small"
+              sx={{ minWidth: "30px", color: "#999" }}
+            >
+              ✕
+            </Button>
+          </Box>
 
-    {viewLoading ? (
-      <Box display="flex" justifyContent="center">
-        <CircularProgress />
-      </Box>
-    ) : selectedUser ? (
-      <Box display="flex" flexDirection="column" gap={1}>
-        <Typography><strong>Name:</strong> {selectedUser.name}</Typography>
-        {selectedUser.role === "student" && (
-  <Typography><strong>Programme:</strong> {selectedUser.programme}</Typography>
-)}
-
-
-        {selectedUser.phone && (
-          <Typography><strong>Phone:</strong> {selectedUser.phone}</Typography>
-        )}
-
-        {selectedUser.role === "student" ? (
-          <>
-            <Typography><strong>Student ID:</strong> {selectedUser.student_id || "-"}</Typography>
-            <Typography><strong>Room No:</strong> {selectedUser.room_number || "-"}</Typography>
-            <Typography><strong>Block:</strong> {selectedUser.block || "-"}</Typography>
-          </>
-        ) : (
-          <>
-            <Typography><strong>Work Type:</strong> {selectedUser.work_type || "-"}</Typography>
-           
-            
-          </>
-        )}
-
-        <Box mt={3} display="flex" justifyContent="flex-end">
-          <Button
-            variant="contained"
-            onClick={() => setViewModalOpen(false)}
-            sx={{ textTransform: "none" }}
-          >
-            Close
-          </Button>
+          {viewLoading ? (
+            <Box display="flex" justifyContent="center">
+              <CircularProgress />
+            </Box>
+          ) : selectedUser ? (
+            <Box display="flex" flexDirection="column" gap={1}>
+              <Typography><strong>Name:</strong> {selectedUser.name}</Typography>
+              {selectedUser.role === "student" && (
+                <Typography><strong>Programme:</strong> {selectedUser.programme}</Typography>
+              )}
+              {selectedUser.phone && (
+                <Typography><strong>Phone:</strong> {selectedUser.phone}</Typography>
+              )}
+              {selectedUser.role === "student" ? (
+                <>
+                  <Typography><strong>Student ID:</strong> {selectedUser.student_id || "-"}</Typography>
+                  <Typography><strong>Room No:</strong> {selectedUser.room_number || "-"}</Typography>
+                  <Typography><strong>Block:</strong> {selectedUser.block || "-"}</Typography>
+                </>
+              ) : (
+                <>
+                  <Typography>
+                    <strong>Work Type:</strong> {
+                      WORK_TYPE_OPTIONS.find(type => type.id === selectedUser.work_type_id)?.name ||
+                      selectedUser.work_type ||
+                      "-"
+                    }
+                  </Typography>
+                </>
+              )}
+              <Box mt={3} display="flex" justifyContent="flex-end">
+                <Button
+                  variant="contained"
+                  onClick={() => setViewModalOpen(false)}
+                  sx={{ textTransform: "none" }}
+                >
+                  Close
+                </Button>
+              </Box>
+            </Box>
+          ) : (
+            <Typography>No user selected.</Typography>
+          )}
         </Box>
-      </Box>
-    ) : (
-      <Typography>No user selected.</Typography>
-    )}
-  </Box>
-</Modal>
-
+      </Modal>
     </Box>
   );
 };
