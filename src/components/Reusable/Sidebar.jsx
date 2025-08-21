@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Drawer,
@@ -9,12 +9,7 @@ import {
   Box,
   Typography,
   Button,
-  IconButton,
-  useTheme,
-  useMediaQuery,
 } from "@mui/material";
-import { NavLink } from "react-router-dom";
-import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GroupIcon from "@mui/icons-material/Group";
 import ReportIcon from "@mui/icons-material/Assignment";
@@ -51,10 +46,7 @@ const sidebarComponents = {//sidebar components based on user
   ],
 };
 
-const Sidebar = () => {//behaviour on mobile
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
@@ -62,15 +54,8 @@ const Sidebar = () => {//behaviour on mobile
   const role = user?.role || "admin"; // fallback to admin for demo
   const items = sidebarComponents[role] || [];
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
-  };
-
   const handleNavigation = (path) => {
     navigate(path);
-    if (isMobile) {
-      setMobileOpen(false);
-    }
   };
 
   const handleLogout = () => {
@@ -78,8 +63,8 @@ const Sidebar = () => {//behaviour on mobile
     navigate("/login");
   };
 
-  const drawerContent =(
-    <Box display = "flex" flexDirection = "column" height = "100%" p ={2}>
+  const drawerContent = (
+    <Box display="flex" flexDirection="column" height="100%" p={2}>
       <Box display="flex" alignItems="center" gap={1} mb={4} mt={2}>
         <img src={logo} alt="Logo" style={{ height: 35 }} />
         <Typography variant="h6" sx={{ fontWeight: "bold", color: "#00b0ff" }}>
@@ -95,7 +80,7 @@ const Sidebar = () => {//behaviour on mobile
             sx={{
               mb: 1,
               backgroundColor: location.pathname === item.path ? "#17B1EA" : "transparent",
-              color: location.pathname === item.path ? "white" : "white",
+              color: "white",
               "&:hover": {
                 backgroundColor: "#17B1EA",
                 color: "white",
@@ -103,8 +88,19 @@ const Sidebar = () => {//behaviour on mobile
             }}
             onClick={() => handleNavigation(item.path)}
           >
-            <ListItemIcon sx={{ color: location.pathname === item.path ? "white" : "white" }}>{item.icon}</ListItemIcon>
-            <ListItemText primary={item.name} sx={{ color: location.pathname === item.path ? "white" : "white" }} />
+            <ListItemIcon 
+              sx={{ 
+                color: "white",
+                minWidth: 40,
+                justifyContent: 'center',
+              }}
+            >
+              {item.icon}
+            </ListItemIcon>
+            <ListItemText 
+              primary={item.name} 
+              sx={{ color: "white" }} 
+            />
           </ListItemButton>
         ))}
       </List>
@@ -133,27 +129,18 @@ const Sidebar = () => {//behaviour on mobile
 
   return (
     <Box>
-      {isMobile && (
-        <IconButton color="inherit" onClick={handleDrawerToggle} sx={{ m: 2 }}>
-          <MoreHorizIcon />
-        </IconButton>
-      )}
-
       <Drawer
-        variant={isMobile ? "temporary" : "permanent"}
-        open={isMobile ? mobileOpen : true}
-        onClose={handleDrawerToggle}
-        ModalProps={{ keepMounted: true }}
+        variant="permanent"
         sx={{
           "& .MuiDrawer-paper": {
             width: 250,
             backgroundColor: "#2c2c2c",
             color: "white",
             borderRadius: 2,
-            mt: isMobile ? 0 : 2,
-            ml: isMobile ? 0 : 2,
-            mb: isMobile ? 0 : 2,
-            height: isMobile ? "100%" : "calc(100vh - 32px)",
+            mt: 2,
+            ml: 2,
+            mb: 2,
+            height: "calc(100vh - 32px)",
             boxSizing: "border-box",
           },
         }}
