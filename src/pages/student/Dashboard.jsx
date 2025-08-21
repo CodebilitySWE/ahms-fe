@@ -6,6 +6,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import PersonIcon from '@mui/icons-material/Person';
+import OpenComplaints from '../../components/Reusable/OpenComplaints';
 
 const studentNavItems = [
   { label: 'Dashboard', icon: <DashboardIcon />, route: '/student/dashboard' },
@@ -20,6 +21,7 @@ const Dashboard = () => {
       <Sidebar />
       <Box flex={1} display="flex" flexDirection="column" sx={{ minWidth: 0 }}>
         <NavBar userType="student" pageTitle="Dashboard" />
+        <OpenComplaints role="student"/>
       </Box>
     </Box>
   );
