@@ -10,39 +10,169 @@ import {
   CircularProgress,
   Button,
   Pagination,
+  Modal,
+  TextField,
+  Alert,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
 } from "@mui/material";
 import { Add } from "@mui/icons-material";
 
 import Sidebar from "../../components/Reusable/Sidebar";
 import Navbar from "../../components/Reusable/NavBar";
-
-//  RESOLVED: Replaced inline axios call with fetchUsers from userUtils
-import { fetchUsers } from "../../utils/userUtils";
+import { fetchUsers, createUser, fetchUserById, WORK_TYPE_OPTIONS } from "../../utils/userUtils";
 
 const ManageUsers = () => {
   const [students, setStudents] = useState([]);
   const [artisans, setArtisans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: "",
+    email: "",
+    work_type_id: "",
+  });
+  // No more photoFile state
+  const [error, setError] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [studentPage, setStudentPage] = useState(1);
+  const [artisanPage, setArtisanPage] = useState(1);
+  const usersPerPage = 5;
+
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [viewLoading, setViewLoading] = useState(false);
 
   useEffect(() => {
     const fetchAndSetUsers = async () => {
       try {
-        const token = localStorage.getItem("token");
-
-        //  RESOLVED: moved to utility file(userUtils.js)
+        const token = localStorage.getItem("authToken");
+        if (!token) throw new Error("No authentication token found");
         const { students, artisans } = await fetchUsers(token);
-
         setStudents(students);
         setArtisans(artisans);
       } catch (error) {
-        console.error("Failed to load users:", error);
+        setError(error.message || "Failed to load users");
       } finally {
         setLoading(false);
       }
     };
-
     fetchAndSetUsers();
   }, []);
+
+  const handleAddUser = async () => {
+    try {
+      setAdding(true);
+      const token = localStorage.getItem("authToken");
+      if (!newUser.name || !newUser.email || !newUser.work_type_id) {
+        throw new Error("Please fill in all required fields");
+      }
+      const user = await createUser(token, newUser, null); // null for photoFile
+      setArtisans((prev) => [...prev, user.artisan || user]);
+      setAddModalOpen(false);
+      setNewUser({ name: "", email: "", work_type_id: "" });
+      setError("");
+      window.location.reload();
+    } catch (error) {
+      setError(error.message || "Failed to add artisan");
+    } finally {
+      setAdding(false);
+    }
+  };
+
+  const handleViewUser = async (userId, role) => {
+    try {
+      setViewLoading(true);
+
+      let user = null;
+
+      if (role === "student") {
+        user = students.find((s) => s.id === userId);
+      } else if (role === "artisan") {
+        user = artisans.find((a) => a.id === userId);
+      }
+
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      setSelectedUser({ ...user, role });
+      setViewModalOpen(true);
+    } catch (error) {
+      setError("Failed to load user details");
+    } finally {
+      setViewLoading(false);
+    }
+  };
+
+  const renderAddModal = () => (
+    <Modal open={addModalOpen} onClose={() => setAddModalOpen(false)}>
+      <Box sx={{
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: 400,
+        bgcolor: 'background.paper',
+        boxShadow: 24,
+        p: 4,
+        borderRadius: 2,
+      }}>
+        <Typography variant="h6">Add Artisan</Typography>
+        {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+        <TextField
+          label="Name"
+          value={newUser.name}
+          onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
+          fullWidth
+          margin="normal"
+          required
+        />
+        <TextField
+          label="Email"
+          value={newUser.email}
+          onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+          fullWidth
+          margin="normal"
+          required
+        />
+        <FormControl fullWidth margin="normal" required>
+          <InputLabel id="work-type-label">Work Type</InputLabel>
+          <Select
+            labelId="work-type-label"
+            label="Work Type"
+            value={newUser.work_type_id}
+            onChange={(e) => setNewUser({ ...newUser, work_type_id: e.target.value })}
+          >
+            {WORK_TYPE_OPTIONS.map(type => (
+              <MenuItem key={type.id} value={type.id}>
+                {type.name}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        <Box mt={2}>
+          <Button
+            variant="contained"
+            onClick={handleAddUser}
+            disabled={adding}
+            sx={{ backgroundColor: '#1976d2', '&:hover': { backgroundColor: '#1565c0' } }}
+          >
+            {adding ? "Adding" : "Add"}
+          </Button>
+          <Button
+            onClick={() => setAddModalOpen(false)}
+            sx={{ ml: 2, color: '#1976d2' }}
+            disabled={adding}
+          >
+            Cancel
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
+  );
 
   const renderStudentTable = () => (
     <Box p={2} borderRadius={2} bgcolor="#fff" boxShadow={1} mb={4}>
@@ -59,21 +189,27 @@ const ManageUsers = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {students.length > 0 ? students.map((student) => (
-            <TableRow key={student.id}>
-              <TableCell>
-                <Box sx={{ fontWeight: "bold" }}>{student.name}</Box>
-                <Typography variant="body2" color="textSecondary">
-                  {student.email}
-                </Typography>
-              </TableCell>
-              <TableCell>{student.room_no || "-"}</TableCell>
-              <TableCell>{student.student_id || "-"}</TableCell>
-              <TableCell>
-                <Button variant="outlined" size="small">View</Button>
-              </TableCell>
-            </TableRow>
-          )) : (
+          {students.length > 0 ? (
+            students
+              .slice((studentPage - 1) * usersPerPage, studentPage * usersPerPage)
+              .map((student) => (
+                <TableRow key={student.id}>
+                  <TableCell>
+                    <Box sx={{ fontWeight: "bold" }}>{student.name}</Box>
+                    <Typography variant="body2" color="textSecondary">
+                      {student.email}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>{student.room_number || "-"}</TableCell>
+                  <TableCell>{student.student_id || "-"}</TableCell>
+                  <TableCell>
+                    <Button variant="outlined" size="small" onClick={() => handleViewUser(student.id, "student")}>
+                      View
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+          ) : (
             <TableRow>
               <TableCell colSpan={4} align="center">No students found...</TableCell>
             </TableRow>
@@ -82,7 +218,9 @@ const ManageUsers = () => {
       </Table>
       <Box mt={2} display="flex" justifyContent="left">
         <Pagination
-          count={3}
+          count={Math.max(1, Math.ceil(students.length / usersPerPage))}
+          page={studentPage}
+          onChange={(e, page) => setStudentPage(page)}
           shape="rounded"
           sx={{
             '& .MuiPaginationItem-root': {
@@ -95,8 +233,9 @@ const ManageUsers = () => {
               },
               '&:hover': {
                 backgroundColor: '#1976d2',
-              }
-            }
+                color: '#fff',
+              },
+            },
           }}
         />
       </Box>
@@ -118,35 +257,43 @@ const ManageUsers = () => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {artisans.length > 0 ? artisans.map((artisan) => (
-            <TableRow key={artisan.id}>
-              <TableCell>
-                <Box sx={{ fontWeight: "bold" }}>{artisan.name}</Box>
-                <Typography variant="body2" color="textSecondary">
-                  {artisan.email}
-                </Typography>
-              </TableCell>
-              <TableCell>{artisan.role || "-"}</TableCell>
-              <TableCell>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    backgroundColor: "#4caf50",
-                    color: "#fff",
-                    px: 1.5,
-                    py: 0.5,
-                    borderRadius: 1,
-                    display: "inline-block"
-                  }}
-                >
-                  {artisan.status || "ONLINE"}
-                </Typography>
-              </TableCell>
-              <TableCell>
-                <Button variant="outlined" size="small">View</Button>
-              </TableCell>
-            </TableRow>
-          )) : (
+          {artisans.length > 0 ? (
+            artisans
+              .slice((artisanPage - 1) * usersPerPage, artisanPage * usersPerPage)
+              .map((artisan) => (
+                <TableRow key={artisan.id}>
+                  <TableCell>
+                    <Box sx={{ fontWeight: "bold" }}>{artisan.name}</Box>
+                    <Typography variant="body2" color="textSecondary">
+                      {artisan.email}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    {WORK_TYPE_OPTIONS.find(type => type.id === artisan.work_type_id)?.name || artisan.work_type || "-"}
+                  </TableCell>
+                  <TableCell>
+                    <Typography
+                      variant="caption"
+                      sx={{
+                        backgroundColor: "#4caf50",
+                        color: "#fff",
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1,
+                        display: "inline-block",
+                      }}
+                    >
+                      {artisan.status || "ONLINE"}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Button variant="outlined" size="small" onClick={() => handleViewUser(artisan.id, "artisan")}>
+                      View
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))
+          ) : (
             <TableRow>
               <TableCell colSpan={4} align="center">No artisans found...</TableCell>
             </TableRow>
@@ -155,7 +302,9 @@ const ManageUsers = () => {
       </Table>
       <Box mt={2} display="flex" justifyContent="left">
         <Pagination
-          count={3}
+          count={Math.max(1, Math.ceil(artisans.length / usersPerPage))}
+          page={artisanPage}
+          onChange={(e, page) => setArtisanPage(page)}
           shape="rounded"
           sx={{
             '& .MuiPaginationItem-root': {
@@ -168,8 +317,9 @@ const ManageUsers = () => {
               },
               '&:hover': {
                 backgroundColor: '#1976d2',
-              }
-            }
+                color: '#fff',
+              },
+            },
           }}
         />
       </Box>
@@ -179,16 +329,9 @@ const ManageUsers = () => {
   return (
     <Box>
       <Navbar />
-
       <Box display="flex">
         <Sidebar />
-        <Box
-          flexGrow={1}
-          ml={{ md: "280px" }}
-          p={3}
-          bgcolor="#f8f4f4ff"
-          minHeight="100vh"
-        >
+        <Box flexGrow={1} ml={{ md: "280px" }} p={3} bgcolor="#f8f4f4ff" minHeight="100vh">
           {loading ? (
             <Box display="flex" justifyContent="center" mt={5}>
               <CircularProgress />
@@ -199,6 +342,7 @@ const ManageUsers = () => {
                 <Button
                   variant="contained"
                   startIcon={<Add />}
+                  onClick={() => setAddModalOpen(true)}
                   sx={{
                     backgroundColor: '#fff',
                     color: '#1976d2',
@@ -207,13 +351,14 @@ const ManageUsers = () => {
                     boxShadow: '0px 1px 3px rgba(0, 0, 0, 0.2)',
                     border: '1px solid #e0e0e0',
                     '&:hover': {
-                      backgroundColor: '#f5f5f5'
-                    }
+                      backgroundColor: '#f5f5f5',
+                    },
                   }}
                 >
-                  Add User
+                  Add Artisan
                 </Button>
               </Box>
+              {renderAddModal()}
               {renderArtisanTable()}
               <br />
               {renderStudentTable()}
@@ -221,6 +366,78 @@ const ManageUsers = () => {
           )}
         </Box>
       </Box>
+
+      {/* View User Modal */}
+      <Modal open={viewModalOpen} onClose={() => setViewModalOpen(false)}>
+        <Box
+          sx={{
+            position: "absolute",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            width: { xs: 300, sm: 400, md: 500 },
+            bgcolor: "background.paper",
+            boxShadow: 24,
+            p: 4,
+            borderRadius: 2,
+          }}
+        >
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Typography variant="h6">User Details</Typography>
+            <Button
+              onClick={() => setViewModalOpen(false)}
+              size="small"
+              sx={{ minWidth: "30px", color: "#999" }}
+            >
+              ✕
+            </Button>
+          </Box>
+
+          {viewLoading ? (
+            <Box display="flex" justifyContent="center">
+              <CircularProgress />
+            </Box>
+          ) : selectedUser ? (
+            <Box display="flex" flexDirection="column" gap={1}>
+              <Typography><strong>Name:</strong> {selectedUser.name}</Typography>
+              {selectedUser.role === "student" && (
+                <Typography><strong>Programme:</strong> {selectedUser.programme}</Typography>
+              )}
+              {selectedUser.phone && (
+                <Typography><strong>Phone:</strong> {selectedUser.phone}</Typography>
+              )}
+              {selectedUser.role === "student" ? (
+                <>
+                  <Typography><strong>Student ID:</strong> {selectedUser.student_id || "-"}</Typography>
+                  <Typography><strong>Room No:</strong> {selectedUser.room_number || "-"}</Typography>
+                  <Typography><strong>Block:</strong> {selectedUser.block || "-"}</Typography>
+                </>
+              ) : (
+                <>
+                  <Typography>
+                    <strong>Work Type:</strong> {
+                      WORK_TYPE_OPTIONS.find(type => type.id === selectedUser.work_type_id)?.name ||
+                      selectedUser.work_type ||
+                      "-"
+                    }
+                  </Typography>
+                </>
+              )}
+              <Box mt={3} display="flex" justifyContent="flex-end">
+                <Button
+                  variant="contained"
+                  onClick={() => setViewModalOpen(false)}
+                  sx={{ textTransform: "none" }}
+                >
+                  Close
+                </Button>
+              </Box>
+            </Box>
+          ) : (
+            <Typography>No user selected.</Typography>
+          )}
+        </Box>
+      </Modal>
     </Box>
   );
 };
