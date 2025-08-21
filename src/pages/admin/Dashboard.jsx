@@ -25,7 +25,7 @@ const Dashboard = () => {
       <Sidebar role="admin" />
       <Box flex={1} display="flex" flexDirection="column" sx={{ minWidth: 0 }}>
         <NavBar userType="admin" pageTitle="Dashboard" />
-        <OpenComplaints />
+        <OpenComplaints role="admin" />
       </Box>
     </Box>
   );

@@ -11,7 +11,7 @@ import { green, orange, red, yellow } from '@mui/material/colors';
 
 
 
-const Dashboard = () => {
+const Dashboard = ({role}) => {
   const [complaints, setComplaints] = useState([]);
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ahms-be.onrender.com';
@@ -24,7 +24,19 @@ const Dashboard = () => {
           throw new Error('Authentication failed');
         }
 
-        const url = `${API_BASE_URL}/api/admin/dashboard/complaints/open`;
+        //endpoints associated with different roles
+        let url ='';
+        if (role === 'admin'){
+            url = `${API_BASE_URL}/api/admin/dashboard/complaints/open`;
+        }else if (role === 'artisan'){
+            url = `${API_BASE_URL}/api/artisan/dashboard/complaints/open`;
+        }else if(role === 'student'){
+            url = `${API_BASE_URL}/api/student/dashboard/complaints/open`;
+        }else{
+            console.error("invalid role:", role);
+            return;
+        }
+
         const urlWithParams = new URL(url);
         urlWithParams.searchParams.append('limit', '5');
         urlWithParams.searchParams.append('offset', '0');
@@ -47,7 +59,7 @@ const Dashboard = () => {
     };
 
     fetchComplaints();
-  }, []);
+  }, [role, API_BASE_URL]);
 
   const getPriorityStyle = (priority) => {
     const level = priority.toLowerCase();
