@@ -8,6 +8,7 @@ import NavBar from '../../components/Reusable/NavBar';
 import Sidebar from '../../components/Reusable/Sidebar';
 import DashboardCard from '../../components/Reusable/DashboardCard';
 import Notification from '../../components/Reusable/Notification';
+import OpenComplaints from '../../components/Reusable/OpenComplaints';
 
 
 
@@ -189,11 +190,18 @@ const Dashboard = () => {
               />
             ))}
           </Box>
+          <Box display="flex" justifyContent="flex-start" sx={{ ml: { xs: 0, md: '400px' } }}>
+           <Box sx={{ width: '100%', maxWidth: 600 }}>
+            <OpenComplaints role="admin" />
+           </Box>
+          </Box>
+
+          
           <Box display="flex" justifyContent="flex-end" sx={{ ml: { xs: 0, md: '260px' } }}>
            <Box sx={{ width: '100%', maxWidth: 400 }}>
             <Notification />
            </Box>
-         </Box>
+          </Box>
 
 
 
