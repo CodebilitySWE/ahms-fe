@@ -190,18 +190,18 @@ const Dashboard = () => {
               />
             ))}
           </Box>
-          <Box display="flex" justifyContent="flex-start" sx={{ ml: { xs: 0, md: '400px' } }}>
-           <Box sx={{ width: '100%', maxWidth: 600 }}>
-            <OpenComplaints role="admin" />
-           </Box>
-          </Box>
+          <Box  display={'grid'} gridTemplateColumns={{ xs: '1fr', md: '1fr 1fr' }} gap={3} sx={{ ml: { xs: 0, md: '260px' } }}>
 
-          
-          <Box display="flex" justifyContent="flex-end" sx={{ ml: { xs: 0, md: '260px' } }}>
-           <Box sx={{ width: '100%', maxWidth: 400 }}>
-            <Notification />
-           </Box>
+            <Box sx={{ width: '100%', maxWidth: 600 }}>
+              <OpenComplaints role="admin" />
+            </Box>
+
+            <Box sx={{ width: '100%', maxWidth: 400 }}>
+                <Notification />
+            </Box>
+            
           </Box>
+          
 
 
 
