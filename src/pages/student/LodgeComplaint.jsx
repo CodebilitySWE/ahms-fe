@@ -157,7 +157,7 @@ export default function LComplaint() {
       >
         <Box
           sx={{
-            bgcolor: '#1976d2',
+            bgcolor: '#2DA94B',
             px: 3,
             py: 2,
             color: 'white',
@@ -321,10 +321,10 @@ export default function LComplaint() {
               variant="contained"
               disabled={isSubmitting}
               sx={{
-                backgroundColor: '#1976d2',
+                backgroundColor: '#2DA94B',
                 color: '#fff',
                 '&:hover': {
-                  backgroundColor: '#1565c0',
+                  backgroundColor: '#2DA94Bf',
                 },
                 borderRadius: 2,
                 textTransform: 'none',
