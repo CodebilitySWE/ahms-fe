@@ -20,29 +20,29 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import logo from "../../assets/logo.png";
 import { useAuth } from "../../contexts/AuthContext";
 
-const sidebarComponents = {//sidebar components based on user
+const sidebarComponents = {
   student: [
-    {name: "Dashboard", icon: <DashboardIcon />, path: "/student/dashboard"},
-    {name: "Lodge Complaint", icon: <ReportIcon />, path: "/student/lodge-complaint"},
-    {name: "My Complaints", icon: <ReportIcon />, path: "/student/complaints"},
-    {name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/student/notifications"},
-    {name: "Profile", icon: <PersonIcon />, path: "/student/profile"},
+    { name: "Dashboard", icon: <DashboardIcon />, path: "/student/dashboard" },
+    { name: "Lodge Complaint", icon: <ReportIcon />, path: "/student/lodge-complaint" },
+    { name: "My Complaints", icon: <ReportIcon />, path: "/student/complaints" },
+    { name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/student/notifications" },
+    { name: "Profile", icon: <PersonIcon />, path: "/student/profile" },
   ],
   artisan: [
-    {name: "Dashboard", icon: <DashboardIcon />, path: "/artisan/dashboard"},
-    {name: "Job Request", icon: <ReportIcon />, path: "/artisan/job-request"},
-    {name: "Upload Report", icon: <ReportIcon />, path: "/artisan/upload-report"},
-    {name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/artisan/notifications"},
-    {name: "Profile", icon: <PersonIcon />, path: "/artisan/profile"},
-    {name: "Statistics", icon: <BarChartIcon />, path: "/artisan/statistics"},
+    { name: "Dashboard", icon: <DashboardIcon />, path: "/artisan/dashboard" },
+    { name: "Job Request", icon: <ReportIcon />, path: "/artisan/job-request" },
+    { name: "Upload Report", icon: <ReportIcon />, path: "/artisan/upload-report" },
+    { name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/artisan/notifications" },
+    { name: "Profile", icon: <PersonIcon />, path: "/artisan/profile" },
+    { name: "Statistics", icon: <BarChartIcon />, path: "/artisan/statistics" },
   ],
   admin: [
-    {name: "Dashboard", icon: <DashboardIcon />, path: "/admin/dashboard"},
-    {name: "Manage Users", icon: <GroupIcon />, path: "/admin/manage-users"},
-    {name: "Complaints", icon: <ReportIcon />, path: "/admin/complaints"},
-    {name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/admin/notifications"},
-    {name: "Profile", icon: <PersonIcon />, path: "/admin/profile"},
-    {name: "Statistics", icon: <BarChartIcon />, path: "/admin/statistics"},
+    { name: "Dashboard", icon: <DashboardIcon />, path: "/admin/dashboard" },
+    { name: "Manage Users", icon: <GroupIcon />, path: "/admin/manage-users" },
+    { name: "Complaints", icon: <ReportIcon />, path: "/admin/complaints" },
+    { name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/admin/notifications" },
+    { name: "Profile", icon: <PersonIcon />, path: "/admin/profile" },
+    { name: "Statistics", icon: <BarChartIcon />, path: "/admin/statistics" },
   ],
 };
 
@@ -51,7 +51,7 @@ const Sidebar = () => {
   const location = useLocation();
   const { user, logout } = useAuth();
 
-  const role = user?.role || "admin"; // fallback to admin for demo
+  const role = user?.role || "admin";
   const items = sidebarComponents[role] || [];
 
   const handleNavigation = (path) => {
@@ -66,12 +66,20 @@ const Sidebar = () => {
   const drawerContent = (
     <Box display="flex" flexDirection="column" height="100%" p={2}>
       <Box display="flex" alignItems="center" gap={1} mb={4} mt={2}>
-        <img src={logo} alt="Logo" style={{ height: 35 }} />
-        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#00b0ff" }}>
+        <img
+          src={logo}
+          alt="Logo"
+          style={{
+            height: 35,
+            filter:
+              "brightness(0) saturate(100%) invert(37%) sepia(93%) saturate(1458%) hue-rotate(115deg) brightness(94%) contrast(102%)",
+          }}
+        />
+        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2DA94B" }}>
           ACMS
         </Typography>
       </Box>
-      <Box height={2} bgcolor="#00b0ff" borderRadius={1} mb={2} />
+      <Box height={2} bgcolor="#2DA94B" borderRadius={1} mb={2} />
 
       <List>
         {items.map((item) => (
@@ -79,28 +87,25 @@ const Sidebar = () => {
             key={item.name}
             sx={{
               mb: 1,
-              backgroundColor: location.pathname === item.path ? "#17B1EA" : "transparent",
+              backgroundColor: location.pathname === item.path ? "#2DA94B" : "transparent",
               color: "white",
               "&:hover": {
-                backgroundColor: "#17B1EA",
+                backgroundColor: "#2DA94B",
                 color: "white",
               },
             }}
             onClick={() => handleNavigation(item.path)}
           >
-            <ListItemIcon 
-              sx={{ 
+            <ListItemIcon
+              sx={{
                 color: "white",
                 minWidth: 40,
-                justifyContent: 'center',
+                justifyContent: "center",
               }}
             >
               {item.icon}
             </ListItemIcon>
-            <ListItemText 
-              primary={item.name} 
-              sx={{ color: "white" }} 
-            />
+            <ListItemText primary={item.name} sx={{ color: "white" }} />
           </ListItemButton>
         ))}
       </List>
@@ -113,11 +118,11 @@ const Sidebar = () => {
           fullWidth
           onClick={handleLogout}
           sx={{
-            backgroundColor: "#00b0ff",
+            backgroundColor: "#2DA94B",
             textTransform: "none",
             borderRadius: 2,
             "&:hover": {
-              backgroundColor: "#0096cc",
+              backgroundColor: "#258c3e",
             },
           }}
         >
