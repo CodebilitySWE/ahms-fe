@@ -100,8 +100,8 @@ const LoginPage = () => {
     if (user && !authLoading) {
       if (user.role === 'admin') {
         navigate('/admin/dashboard', { replace: true });
-      } else if (user.role === 'artisan') {
-        navigate('/artisan/dashboard', { replace: true });
+      // } else if (user.role === 'artisan') {
+      //   navigate('/artisan/dashboard', { replace: true });
       } else if (user.role === 'student') {
         navigate('/student/dashboard', { replace: true });
       }
@@ -248,7 +248,7 @@ const LoginPage = () => {
       
       {/* Ash/Gray background at the top - more visible */}
       <Box
-        sx={{
+    sx={{
           position: 'absolute',
           top: 0,
           left: 0,
@@ -341,12 +341,12 @@ const LoginPage = () => {
               variant="h3"
               sx={{
                 fontSize: { xs: '1.4rem', sm: '1.6rem', md: '2rem' },
-                fontWeight: 'bold',
+                fontWeight: '800',
                 color: greenPalette.mediumGreen,
                 opacity: 0.9,
                 letterSpacing: '0.0em',
                 lineHeight: 1,
-                fontFamily: 'Arial, sans-serif',
+                fontFamily: 'Roboto, sans-serif',
                 textShadow: '1px 1px 2px rgba(0,0,0,0.1)',
                 borderRadius: '6px',
                 padding: '2px 4px'
@@ -459,7 +459,7 @@ const LoginPage = () => {
                     </Typography>
                   }
                 />
-                <FormControlLabel
+                {/* <FormControlLabel
                   value="Artisan"
                   control={
                     <Radio
@@ -472,9 +472,9 @@ const LoginPage = () => {
                           fontSize: '1.1rem'
                         }
                       }}
-                    />
-                  }
-                  label={
+                    /> */}
+                  {/* } */}
+                  {/* label={
                     <Typography 
                       variant="body2" 
                       sx={{ 
@@ -485,7 +485,7 @@ const LoginPage = () => {
                       Artisan
                     </Typography>
                   }
-                />
+                /> */}
               </RadioGroup>
             </Box>
 
