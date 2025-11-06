@@ -5,6 +5,7 @@ import Notifications from '../pages/admin/Notifications';
 import Profile from '../pages/Shared/Profile';
 import Statistics from '../pages/admin/Statistics';
 import ManageUsers from '../pages/admin/ManageUsers';
+import JobRequest from '../pages/admin/JobRequest';
 import ProtectedRoute from './ProtectedRoutes';
 
 const AdminRoutes = () => [
@@ -36,6 +37,15 @@ const AdminRoutes = () => [
     }
   />,
   <Route
+    key="admin-requests"
+    path="/admin/requests"
+    element={
+      <ProtectedRoute allowedRoles={['admin']}>
+        <JobRequest />
+      </ProtectedRoute>
+    }
+  />,
+  <Route
     key="admin-notifications"
     path="/admin/notifications"
     element={
@@ -53,15 +63,15 @@ const AdminRoutes = () => [
       </ProtectedRoute>
     }
   />,
-  <Route
-    key="admin-statistics"
-    path="/admin/statistics"
-    element={
-      <ProtectedRoute allowedRoles={['admin']}>
-        <Statistics />
-      </ProtectedRoute>
-    }
-  />
+  // <Route
+  //   key="admin-statistics"
+  //   path="/admin/statistics"
+  //   element={
+  //     <ProtectedRoute allowedRoles={['admin']}>
+  //       <Statistics />
+  //     </ProtectedRoute>
+  //   }
+  // />
 ];
 
 export default AdminRoutes;

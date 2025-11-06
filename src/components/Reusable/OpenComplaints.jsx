@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Table from '@mui/material/Table';
@@ -7,14 +6,14 @@ import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
+import IconButton from '@mui/material/IconButton';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { green, orange, red, yellow } from '@mui/material/colors';
 
-
-
-const Dashboard = ({role}) => {
+const OpenComplaints = ({ role }) => {
   const [complaints, setComplaints] = useState([]);
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ahms-be.onrender.com';
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     const fetchComplaints = async () => {
@@ -24,17 +23,17 @@ const Dashboard = ({role}) => {
           throw new Error('Authentication failed');
         }
 
-        //endpoints associated with different roles
-        let url ='';
-        if (role === 'admin'){
-            url = `${API_BASE_URL}/api/admin/dashboard/complaints/open`;
-        }else if (role === 'artisan'){
-            url = `${API_BASE_URL}/api/artisan/dashboard/complaints/open`;
-        }else if(role === 'student'){
-            url = `${API_BASE_URL}/api/student/dashboard/complaints/open`;
-        }else{
-            console.error("invalid role:", role);
-            return;
+        // Endpoints associated with different roles
+        let url = '';
+        if (role === 'admin') {
+          url = `${API_BASE_URL}/api/admin/dashboard/complaints/open`;
+        } else if (role === 'artisan') {
+          url = `${API_BASE_URL}/api/artisan/dashboard/complaints/open`;
+        } else if (role === 'student') {
+          url = `${API_BASE_URL}/api/student/dashboard/complaints/open`;
+        } else {
+          console.error('Invalid role:', role);
+          return;
         }
 
         const urlWithParams = new URL(url);
@@ -51,8 +50,7 @@ const Dashboard = ({role}) => {
         });
 
         const data = await response.json();
-        setComplaints(data.data);
-        console.log(data.data);
+        setComplaints(data.data || []);
       } catch (error) {
         console.error('Error fetching complaints:', error);
       }
@@ -62,14 +60,14 @@ const Dashboard = ({role}) => {
   }, [role, API_BASE_URL]);
 
   const getPriorityStyle = (priority) => {
-    const level = priority.toLowerCase();
+    const level = priority?.toLowerCase() || '';
     switch (level) {
       case 'low':
-        return { backgroundColor: green[500], width: '20%' };
+        return { backgroundColor: green[500], width: '25%' };
       case 'medium':
-        return { backgroundColor: yellow[500], width: '60%' };
+        return { backgroundColor: yellow[600], width: '50%' };
       case 'high':
-        return { backgroundColor: orange[500], width: '80%' };
+        return { backgroundColor: orange[500], width: '75%' };
       case 'urgent':
         return { backgroundColor: red[500], width: '100%' };
       default:
@@ -78,81 +76,129 @@ const Dashboard = ({role}) => {
   };
 
   return (
-
-        <Box
-          sx={{
-            width: '100%',
-            maxWidth: 750,
-            mt: 25,
-            ml: 40,
-            backgroundColor: '#fff',
-            borderRadius: '8px 8px 0 0',
-            p: 3,
-            pb: 6,
-            boxShadow: 3,
-          }}
+    <Box
+      sx={{
+        width: '100%',
+        maxWidth: { xs: '100%', md: 750 },
+        backgroundColor: '#fff',
+        borderRadius: 2,
+        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+        overflow: 'hidden'
+      }}
+    >
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          p: 2.5,
+          borderBottom: '1px solid #e0e0e0'
+        }}
+      >
+        <Typography
+          variant="h6"
+          fontWeight="600"
+          sx={{ color: '#4a6785', fontSize: '1.1rem' }}
         >
-          <Typography
-            variant="h6"
-            fontWeight="bold"
-            mb={6}
-            textAlign="left"
-            sx={{ color: '#4a6785' }}
-          >
-            Open Complaints
-          </Typography>
+          Open Complaints
+        </Typography>
+        <IconButton size="small">
+          <MoreVertIcon />
+        </IconButton>
+      </Box>
 
-          <Table size="small">
-            <TableHead>
-              <TableRow>
-                <TableCell sx={{ color: '#444', fontWeight: 500 }}>COMPLAINANT</TableCell>
-                <TableCell align="center" sx={{ color: '#444', fontWeight: 500 }}>
-                  ROOM NUMBER
-                </TableCell>
-                <TableCell align="center" sx={{ color: '#444', fontWeight: 500 }}>
-                  PRIORITY
-                </TableCell>
-                <TableCell sx={{ color: '#444', fontWeight: 500 }}>PRIORITY LEVEL</TableCell>
-              </TableRow>
-            </TableHead>
+      <Box sx={{ overflowX: 'auto' }}>
+        <Table size="small">
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ color: '#666', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5 }}>
+                COMPLAINANT
+              </TableCell>
+              <TableCell align="center" sx={{ color: '#666', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5 }}>
+                ROOM NUMBER
+              </TableCell>
+              <TableCell align="center" sx={{ color: '#666', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5 }}>
+                PRIORITY
+              </TableCell>
+              <TableCell sx={{ color: '#666', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5 }}>
+                PRIORITY LEVEL
+              </TableCell>
+            </TableRow>
+          </TableHead>
 
-            <TableBody>
-              {Array.isArray(complaints) && complaints.length > 0 ? (
-                complaints.map((c, index) => (
-                  <TableRow key={index} sx={{ height: 50 }}>
-                    <TableCell sx={{ fontWeight: 600 }}>{c.complainant_name}</TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 500 }}>
-                      {String(c.room_number || c.room).padStart(2, '0')}
-                    </TableCell>
-                    <TableCell align="center" sx={{ fontWeight: 500 }}>
-                      {c.priority}
-                    </TableCell>
-                    <TableCell>
+          <TableBody>
+            {Array.isArray(complaints) && complaints.length > 0 ? (
+              complaints.map((c, index) => (
+                <TableRow 
+                  key={index} 
+                  sx={{ 
+                    height: 60,
+                    '&:hover': { backgroundColor: '#f9f9f9' },
+                    borderBottom: index === complaints.length - 1 ? 'none' : '1px solid #f0f0f0'
+                  }}
+                >
+                  <TableCell sx={{ fontWeight: 600, color: '#333', fontSize: '0.875rem' }}>
+                    {c.complainant_name || 'Unknown'}
+                  </TableCell>
+                  <TableCell align="center" sx={{ fontWeight: 500, color: '#555', fontSize: '0.875rem' }}>
+                    {String(c.room_number || c.room || '00').padStart(2, '0')}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Box
+                      sx={{
+                        display: 'inline-block',
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 1,
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        textTransform: 'capitalize',
+                        color: '#fff',
+                        backgroundColor: 
+                          c.priority?.toLowerCase() === 'low' ? green[500] :
+                          c.priority?.toLowerCase() === 'medium' ? yellow[700] :
+                          c.priority?.toLowerCase() === 'high' ? orange[600] :
+                          c.priority?.toLowerCase() === 'urgent' ? red[500] :
+                          '#999'
+                      }}
+                    >
+                      {c.priority || 'N/A'}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Box
+                      sx={{
+                        width: 100,
+                        height: 8,
+                        borderRadius: 4,
+                        backgroundColor: '#e0e0e0',
+                        overflow: 'hidden',
+                      }}
+                    >
                       <Box
                         sx={{
-                          width: 70,
-                          height: 6,
+                          height: '100%',
                           borderRadius: 4,
-                          backgroundColor: '#ddd',
-                          overflow: 'hidden',
+                          transition: 'width 0.3s ease',
+                          ...getPriorityStyle(c.priority),
                         }}
-                      >
-                        <Box
-                          sx={{
-                            height: '100%',
-                            borderRadius: 4,
-                            ...getPriorityStyle(c.priority),
-                          }}
-                        />
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : null}
-            </TableBody>
-          </Table>
-        </Box>
+                      />
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell colSpan={4} align="center" sx={{ py: 4, color: '#999' }}>
+                  No open complaints
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </Box>
+    </Box>
   );
 };
 
-export default Dashboard;
+export default OpenComplaints;
