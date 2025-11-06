@@ -41,7 +41,7 @@ export default function LComplaint() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [alert, setAlert] = useState({ open: false, message: '', severity: 'success' });
-  const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
+  // const toggleSidebar = () => setIsSidebarOpen((prev) => !prev);
   const closeSidebar = () => setIsSidebarOpen(false);
 
   // Fetch categories on component mount
@@ -139,9 +139,24 @@ export default function LComplaint() {
   };
 
   return (
-    <Box display="flex" flexDirection="column" minHeight="100vh">
-      <NavBar onMenuClick={toggleSidebar} />
-      <Sidebar role="student" open={isSidebarOpen} onClose={closeSidebar} />
+    <Box display="flex" minHeight="100vh">
+      <Sidebar />
+      <Box
+        flex={1}
+        display="flex"
+        flexDirection="column"
+        sx={{
+          minWidth: 0,
+          ml: { xs: 0, sm: '280px' },
+        }}
+      >
+        <NavBar 
+          notificationCount={5}
+          // onSearch={handleSearch}
+          pageName="Lodge Complaints"           // The current page name
+          userType="/Student"              // User type label
+          userRole="student"              // Role for navigation (student/admin/artisan)
+        />
 
       <Box
         flex={1}
@@ -151,13 +166,13 @@ export default function LComplaint() {
           width: '100%',
           maxWidth: '1095px',
           mx: 'auto',
-          ml: { xs: 0, sm: '250px' },
+          ml: { xs: 0, sm: '0px' },
           transition: 'margin-left 0.3s ease-in-out',
         }}
       >
         <Box
           sx={{
-            bgcolor: '#1976d2',
+            bgcolor: '#2DA94B',
             px: 3,
             py: 2,
             color: 'white',
@@ -321,10 +336,10 @@ export default function LComplaint() {
               variant="contained"
               disabled={isSubmitting}
               sx={{
-                backgroundColor: '#1976d2',
+                backgroundColor: '#2DA94B',
                 color: '#fff',
                 '&:hover': {
-                  backgroundColor: '#1565c0',
+                  backgroundColor: '#2DA94Bf',
                 },
                 borderRadius: 2,
                 textTransform: 'none',
@@ -360,6 +375,7 @@ export default function LComplaint() {
           {alert.message}
         </Alert>
       </Snackbar>
+      </Box>
     </Box>
   );
 }

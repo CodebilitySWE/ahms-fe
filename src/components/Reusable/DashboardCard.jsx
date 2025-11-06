@@ -4,7 +4,7 @@ import {
   CardContent,
   Box,
   Typography,
-  useTheme,
+  // useTheme,
   Skeleton,
   Divider,
 } from '@mui/material';
@@ -69,7 +69,7 @@ const DashboardCard = ({
   // Click handler
   onClick = null,
 }) => {
-  const theme = useTheme();
+  // const theme = useTheme();
   const { mode } = useThemeContext();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -98,7 +98,7 @@ const DashboardCard = ({
         boxShadow: isHovered 
           ? '0 6px 20px rgba(0, 0, 0, 0.15)' 
           : '0 2px 10px rgba(0, 0, 0, 0.08)',
-        width: 250,
+        width: 220,
         height: 120,
         minWidth: 200,
         maxWidth: 270,

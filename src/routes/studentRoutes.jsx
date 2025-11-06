@@ -4,6 +4,7 @@ import LodgeComplaint from '../pages/student/LodgeComplaint'; // Make sure the f
 import Notifications from '../pages/student/Notifications';
 import Profile from '../pages/Shared/Profile';
 import ProtectedRoute from './ProtectedRoutes';
+import MyComplaints from '../pages/student/MyComplaints';
 
 const StudentRoutes = () => [
   <Route
@@ -38,16 +39,7 @@ const StudentRoutes = () => [
     path="/student/complaints"
     element={
       <ProtectedRoute allowedRoles={['student']}>
-        <div>My Complaints Page - Coming Soon</div>
-      </ProtectedRoute>
-    }
-  />,
-  <Route
-    key="student-notifications"
-    path="/student/notifications"
-    element={
-      <ProtectedRoute allowedRoles={['student']}>
-        <div>Notifications Page - Coming Soon</div>
+        <MyComplaints />
       </ProtectedRoute>
     }
   />,

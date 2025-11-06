@@ -1,34 +1,28 @@
 import {
   Box,
   Typography,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   IconButton,
   Button,
-  Stack
+  CircularProgress
 } from '@mui/material';
 import { useThemeContext } from '../../contexts/ThemeContext';
 import NavBar from '../../components/Reusable/NavBar';
 import Sidebar from '../../components/Reusable/Sidebar';
 import { useEffect, useState } from 'react';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
-import ClearIcon from '@mui/icons-material/Clear';
+import CloseIcon from '@mui/icons-material/Close';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import WarningAmberOutlinedIcon from '@mui/icons-material/WarningAmberOutlined';
+
 import { formatDistanceToNow } from 'date-fns';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-const token = localStorage.getItem("authToken");
- const limit = 5;
-
+const limit = 5;
 
 const fetchNotifications = async (token, offset = 0) => {
   if (!token) {
     throw new Error("No auth token provided.");
   }
-
 
   const response = await fetch(`${API_BASE_URL}/api/notifications?offset=${offset}&limit=${limit}`, {
     headers: {
@@ -47,115 +41,146 @@ const fetchNotifications = async (token, offset = 0) => {
   return notifications;
 };
 
-
 const Notification = () => {
   const [notifications, setNotifications] = useState([]);
-  const [expandedId, setExpandedId] = useState(null);
+  const [expandedIds, setExpandedIds] = useState([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
-
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    
+    const token = localStorage.getItem("authToken");
     fetchNotifications(token, 0)
       .then((newData) => {
-      setNotifications(newData);
-      setHasMore(newData.length === limit); // if less than limit, no more pages
-    })
-    .catch((err) => console.error("Error fetching notifications:", err.message));
-}, []);
-
+        setNotifications(newData);
+        setHasMore(newData.length === limit);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching notifications:", err.message);
+        setLoading(false);
+      });
+  }, []);
 
   const handleLoadMore = () => {
-  const newOffset = offset + limit;
-  fetchNotifications(token, newOffset)
-    .then((newData) => {
-      if (newData.length > 0) {
-        setNotifications((prev) => [...prev, ...newData]);
-        setOffset(newOffset);
-        setHasMore(newData.length === limit);
-      } else {
-        setHasMore(false);
-      }
-    })
-    .catch((err) => console.error("Error loading more:", err.message));
-};
-
-  const handleAccordionToggle = (id) => {
-    setExpandedId(expandedId === id ? null : id);
+    const token = localStorage.getItem("authToken");
+    const newOffset = offset + limit;
+    fetchNotifications(token, newOffset)
+      .then((newData) => {
+        if (newData.length > 0) {
+          setNotifications((prev) => [...prev, ...newData]);
+          setOffset(newOffset);
+          setHasMore(newData.length === limit);
+        } else {
+          setHasMore(false);
+        }
+      })
+      .catch((err) => console.error("Error loading more:", err.message));
   };
 
-  const handleDelete = (id, token) => {
+  const handleToggle = (id) => {
+    setExpandedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleDelete = (id) => {
+    const token = localStorage.getItem("authToken");
     setNotifications((prev) => prev.filter((msg) => msg.id !== id));
-    const newResponse = fetch(`${API_BASE_URL}/api/notifications/${id}`, {
+    fetch(`${API_BASE_URL}/api/notifications/${id}`, {
       method: 'DELETE',
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-    });
-    newResponse
+    })
       .then(() => {
-    if (expandedId === id) setExpandedId(null);
+        setExpandedIds(prev => prev.filter(i => i !== id));
       })
       .catch((err) => {
         console.error("Error deleting notification:", err.message);
       });
   };
 
-  const handleMarkAllAsRead = (token) => {
-    
-    const newResponse = fetch(`${API_BASE_URL}/api/notifications/read-all`, {
+  const handleMarkAllAsRead = () => {
+    const token = localStorage.getItem("authToken");
+    fetch(`${API_BASE_URL}/api/notifications/read-all`, {
       method: 'PATCH',
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-    });
-    newResponse
-    .then(() => {
-      setNotifications((prev) =>
-      prev.map((msg) => ({
-        ...msg,
-        is_read: true,
-      }))
-    )})
-    .catch((err) => {
-      console.error("Error marking all as read:", err.message);
-    });
+    })
+      .then(() => {
+        setNotifications((prev) =>
+          prev.map((msg) => ({
+            ...msg,
+            is_read: true,
+          }))
+        );
+      })
+      .catch((err) => {
+        console.error("Error marking all as read:", err.message);
+      });
   };
 
   const getStatusIcon = (status) => {
-    if (status === 'accepted') {
-      return <CheckCircleIcon sx={{ color: 'green', fontSize: 20 }} />;
-    } else if (status === 'declined') {
-      return <WarningAmberOutlinedIcon sx={{ color: 'red', fontSize: 20 }} />;
+    const statusLower = status?.toLowerCase();
+    
+    if (statusLower === 'assigned') {
+      return (
+        <CheckCircleIcon sx={{ color: '#4caf50', fontSize: 24 }} />
+      );
+    } else if (statusLower === 'rejected') {
+      return (
+        <CloseIcon sx={{ color: '#f44336', fontSize: 24, fontWeight: 700 }} />
+      );
+    } else{
+        // Default icon for submitted or other statuses (gray, no color)
+        return (
+          <CheckCircleIcon sx={{ color: '#9e9e9e', fontSize: 24 }} />
+        );
     }
+    
+    
   };
+
+  const getStatusColor = (status) => {
+    const statusLower = status?.toLowerCase();
+    if (statusLower === 'assigned') return '#4caf50';
+    if (statusLower === 'rejected') return '#f44336';
+    if (statusLower !== 'assigned' || statusLower !== 'rejected') return '#2c3e50'; // Dark gray for submitted
+  };
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+        <CircularProgress sx={{ color: '#4caf50' }} />
+      </Box>
+    );
+  }
 
   return (
     <Box
       sx={{
-        width: { xs: '80%', sm: '80%', md: 900 },
+        width: { xs: '90%', sm: '85%', md: 900 },
         minHeight: 425,
-        border: 1,
-        borderRadius: 4,
-        padding: 2,
-        boxShadow: '0px 2px 3px rgba(0, 0, 0, 0.2)',
-        borderColor: '#F5F5F5',
+        border: '1px solid #e0e0e0',
+        borderRadius: 3,
+        padding: 3,
+        boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
         backgroundColor: 'white',
         display: 'flex',
         flexDirection: 'column',
-      }}>
-      
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+      }}
+    >
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography
-          variant="h6"
+          variant="h5"
           sx={{
-            fontWeight: "bold",
-            color: "#44577C",
-            marginBottom: 2,
-            fontSize: 25,
+            fontWeight: 600,
+            color: '#2c3e50',
+            fontSize: 24,
           }}
         >
           Notifications
@@ -164,143 +189,268 @@ const Notification = () => {
         {notifications.length > 0 && (
           <Button
             size="small"
-            startIcon={<ClearIcon sx={{ fontSize: 32 }}/>}
-            onClick={handleMarkAllAsRead(localStorage.getItem("authToken"))}
-            sx={{ fontSize: 15, textTransform: 'none', color: '#44577C', fontWeight: "bold" }}
+            startIcon={<CloseIcon sx={{ fontSize: 18 }} />}
+            onClick={handleMarkAllAsRead}
+            sx={{
+              fontSize: 14,
+              textTransform: 'none',
+              color: '#5a6c7d',
+              fontWeight: 500,
+              '&:hover': {
+                backgroundColor: 'transparent',
+                color: '#2c3e50'
+              }
+            }}
           >
             Mark all as read
           </Button>
         )}
       </Box>
-      
-      {notifications.length === 0 ? (
-        <Typography sx={{ textAlign: "center", color: "gray", fontSize: 18 }}>
-          No notifications to show
-        </Typography>
-      ) : (
-        notifications.map((msg) => {
-          const diffMs = new Date() - new Date(msg.created_at);
-          const diffMinutes = diffMs / (1000 * 60);
-          const timeAgo = diffMinutes < 1
-            ? 'Now'
-            : formatDistanceToNow(new Date(msg.created_at), { addSuffix: true });
 
-          return (
-              <Accordion key={msg.id}
-                expanded={expandedId === msg.id}
-                onChange={() => handleAccordionToggle(msg.id)}
-                disableGutters
+      {notifications.length === 0 ? (
+        <Box sx={{ textAlign: "center", py: 8 }}>
+          <Typography sx={{ color: "#999", fontSize: 16 }}>
+            No notifications to show
+          </Typography>
+        </Box>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {notifications.map((msg) => {
+            const diffMs = new Date() - new Date(msg.created_at);
+            const diffMinutes = diffMs / (1000 * 60);
+            const timeAgo = diffMinutes < 1
+              ? 'Now'
+              : formatDistanceToNow(new Date(msg.created_at), { addSuffix: true });
+
+            const isExpanded = expandedIds.includes(msg.id);
+            const statusColor = getStatusColor(msg.complaint_status);
+
+            return (
+              <Box
+                key={msg.id}
                 sx={{
-                  backgroundColor: msg.is_read ? '#fff' : '#f9f9f9', width: '100%',
+                  backgroundColor: msg.is_read ? '#fff' : '#fafafa',
+                  border: `1px solid ${msg.is_read ? '#e9ecef' : '#d0d0d0'}`,
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                  transition: 'all 0.2s ease'
                 }}
               >
-                <AccordionSummary
-                  expandIcon={<KeyboardArrowDownIcon />}
+                {/* Summary Row */}
+                <Box
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    py: 1,
-                    px: 1,
-                    width: '100%',
-                    backgroundColor: "#fff",
-                    "& .MuiAccordionSummary-content": {
-                      alignItems: "center",
-                    },
+                    display: 'flex',
+                    alignItems: 'center',
+                    p: 2,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      bgcolor: msg.is_read ? '#f9f9f9' : '#f5f5f5'
+                    }
                   }}
+                  onClick={() => handleToggle(msg.id)}
                 >
+                  {getStatusIcon(msg.complaint_status)}
+
+                  <Box sx={{ flex: 1, minWidth: 0, mx: 2 }}>
+                    <Typography
+                      sx={{
+                        fontSize: 14,
+                        fontWeight: msg.is_read ? 400 : 500,
+                        color: '#2c3e50',
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      Complaint ID: <span style={{ color: statusColor, fontWeight: 500 }}>{msg.complaint_id}</span> has been{' '}
+                      <span style={{ color: statusColor, fontWeight: 600 }}>
+                        {msg.complaint_status}
+                      </span>
+                    </Typography>
+                    <Typography
+                      sx={{
+                        fontSize: 12,
+                        color: '#95a5a6',
+                        mt: 0.5
+                      }}
+                    >
+                      {timeAgo}
+                    </Typography>
+                  </Box>
+
+                  <IconButton
+                    size="small"
+                    sx={{
+                      transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 0.3s',
+                      color: '#5a6c7d',
+                      mr: 1
+                    }}
+                  >
+                    <KeyboardArrowDownIcon />
+                  </IconButton>
+
                   <IconButton
                     size="small"
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleDelete(msg.id, localStorage.getItem("authToken"));
+                      handleDelete(msg.id);
                     }}
-                    sx={{ mr: 1 }}
+                    sx={{
+                      color: '#95a5a6',
+                      '&:hover': {
+                        color: '#e74c3c',
+                        backgroundColor: '#fee'
+                      }
+                    }}
                   >
-                    <ClearIcon sx={{ fontSize: 18 }} />
+                    <CloseIcon sx={{ fontSize: 18 }} />
                   </IconButton>
+                </Box>
 
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    {getStatusIcon(msg.status)}
-                    <Stack spacing={0.8}>
-                      <Typography
-                        sx={{
-                          fontSize: msg.is_read ? 15 : 17,
-                          fontWeight: msg.is_read ? 500 : 600,
-                        }}
-                      >
-                        Complaint ID: {msg.id} has been {msg.complaint_status}
-                      </Typography>
-                      <Typography sx={{ fontSize: 12, color: 'gray', fontStyle: 'italic' }}>
-                        {timeAgo}
-                      </Typography>
-                    </Stack>
-                  </Stack>
-                  
-                </AccordionSummary>
-                
-                <AccordionDetails sx={{ px: 2, py: 1 }}>
-                 
-                  <Typography fontSize={msg.is_read ? 14 : 16} color={msg.is_read ? '#000202' : '#000000' }>
-                    {msg.message}
-                  </Typography>
-                  <Typography sx={{ fontSize: 12, color: 'gray', mt: 0.5 }}>
-                    {new Date(msg.created_at).toLocaleString()}
-                  </Typography>
-                </AccordionDetails>
-                
-              </Accordion>
-
-             
-              
-          );
-        })
+                {/* Expanded Details - Block Information */}
+                {isExpanded && (
+                  <Box 
+                    sx={{ 
+                      px: 3, 
+                      pb: 3, 
+                      pt: 1, 
+                      pl: 7, 
+                      borderTop: '1px solid #f0f0f0',
+                      backgroundColor: '#fafafa'
+                    }}
+                  >
+                    <Box
+                      sx={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: 2,
+                        p: 2,
+                        mt: 1
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#5a6c7d' }}>
+                            Block:
+                          </Typography>
+                          <Typography sx={{ fontSize: 13, color: '#2c3e50' }}>
+                            {msg.block || 'N/A'}
+                          </Typography>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#5a6c7d' }}>
+                            Room No:
+                          </Typography>
+                          <Typography sx={{ fontSize: 13, color: '#2c3e50' }}>
+                            {msg.room_number || msg.room_no || 'N/A'}
+                          </Typography>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#5a6c7d' }}>
+                            Category:
+                          </Typography>
+                          <Typography sx={{ fontSize: 13, color: '#2c3e50' }}>
+                            {msg.category_name || msg.category || 'N/A'}
+                          </Typography>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#5a6c7d' }}>
+                            Description:
+                          </Typography>
+                          <Typography 
+                            sx={{ 
+                              fontSize: 13, 
+                              color: '#2c3e50',
+                              maxWidth: '60%',
+                              textAlign: 'right'
+                            }}
+                          >
+                            {msg.description || msg.message || 'No description'}
+                          </Typography>
+                        </Box>
+                        
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#5a6c7d' }}>
+                            Date:
+                          </Typography>
+                          <Typography sx={{ fontSize: 13, color: '#2c3e50' }}>
+                            {new Date(msg.created_at).toLocaleDateString()}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </Box>
+                  </Box>
+                )}
+              </Box>
+            );
+          })}
+        </Box>
       )}
 
       {notifications.length > 0 && hasMore && (
-        <Box display="flex" justifyContent="center" mt={2}>
+        <Box display="flex" justifyContent="center" mt={3}>
           <Button
             variant="outlined"
             endIcon={<ExpandMoreIcon />}
             onClick={handleLoadMore}
             sx={{
               textTransform: "none",
-              fontWeight: "bold",
-              color: "#44577C",
-              borderRadius: 3
+              fontWeight: 500,
+              color: "#5a6c7d",
+              borderColor: '#e0e0e0',
+              borderRadius: 2,
+              px: 3,
+              '&:hover': {
+                borderColor: '#5a6c7d',
+                backgroundColor: '#f8f9fa'
+              }
             }}
           >
             Load More
           </Button>
         </Box>
       )}
-      
     </Box>
-
-  )
+  );
 };
 
 function Notifications() {
   const { mode } = useThemeContext();
 
   return (
-    <Box display="flex" minHeight="100vh" flex-direction="row" sx={{ backgroundColor: mode === 'dark' ? '#121212' : '#f5f5f5' }}>
+    <Box display="flex" minHeight="100vh">
       <Sidebar />
-      <Box flex={1} display="flex" flexDirection="column" sx={{ minWidth: 400 }}>
-        <NavBar notificationCount={5} />
+      <Box
+        flex={1}
+        display="flex"
+        flexDirection="column"
+        sx={{
+          minWidth: 0,
+          ml: { xs: 0, sm: '280px' },
+        }}
+      >
+        <NavBar 
+          notificationCount={5}
+          // onSearch={handleSearch}
+          pageName="Notifications"           // The current page name
+          userType="/Student"              // User type label
+          userRole="student"              // Role for navigation (student/admin/artisan)
+        />
         <Box
           sx={{
-            p: { xs: 0, sm: 2, md: 4 },
+            p: { xs: 2, sm: 3, md: 4 },
             backgroundColor: mode === 'dark' ? '#1a1a1a' : '#f5f5f5',
-            Width: '100%',
+            width: '100%',
             minHeight: 'calc(100vh - 64px)',
             display: 'flex',
-            justifyContent: 'center',
+            justifyContent: 'flex-start',
             alignItems: 'center',
-            marginLeft: { xs: 0, sm: "250px", md: '300px' },
+            ml: { xs: 0, sm: "0px", md: '0px' },
           }}
         >
-
-              <Notification />
+          <Notification />
         </Box>
       </Box>
     </Box>

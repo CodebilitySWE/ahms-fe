@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
@@ -14,13 +15,18 @@ import {
   Search as SearchIcon,
   Notifications as NotificationsIcon,
   AccountCircle,
+  Home as HomeIcon,
 } from '@mui/icons-material';
 
 const NavBar = ({
   notificationCount = 0,
   onSearch = () => {},
+  pageName = '',
+  userType = '',
+  userRole = '', // 'student', 'admin', or 'artisan'
 }) => {
   const theme = useTheme();
+  const navigate = useNavigate();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   const [searchValue, setSearchValue] = useState('');
@@ -30,12 +36,22 @@ const NavBar = ({
     onSearch(e.target.value);
   };
 
+  const handleProfileClick = () => {
+    navigate(`/${userRole}/profile`);
+  };
+
+  const handleNotificationClick = () => {
+    navigate(`/${userRole}/notifications`);
+  };
+
   // Color scheme based on your design
   const colors = {
     searchBorder: '#e0e6ed',
     searchText: '#7c8592',
     iconColor: '#9fa8b3',
     iconHover: '#6b7d92',
+    pageNameColor: '#2c3e50',
+    userTypeColor: '#7c8592',
   };
 
   return (
@@ -44,7 +60,7 @@ const NavBar = ({
         width: '100%',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'flex-end', // Right align everything since we have no left content
+        justifyContent: 'space-between',
         bgcolor: theme.palette.background.paper,
         px: { xs: 2, sm: 3, md: 4 },
         py: { xs: 1.5, sm: 2 },
@@ -55,6 +71,42 @@ const NavBar = ({
         zIndex: theme.zIndex.appBar,
       }}
     >
+      {/* Left Section: Home Icon, User Type, and Page Name */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <HomeIcon 
+          sx={{ 
+            color: colors.iconColor, 
+            fontSize: { xs: 22, sm: 24 } 
+          }} 
+        />
+        <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+          {userType && (
+            <Typography
+              sx={{
+                fontSize: { xs: '0.75rem', sm: '0.85rem' },
+                color: colors.userTypeColor,
+                fontWeight: 400,
+                lineHeight: 1.2,
+              }}
+            >
+              {userType}
+            </Typography>
+          )}
+          {pageName && (
+            <Typography
+              sx={{
+                fontSize: { xs: '0.9rem', sm: '1rem' },
+                color: colors.pageNameColor,
+                fontWeight: 600,
+                lineHeight: 1.2,
+              }}
+            >
+              {pageName}
+            </Typography>
+          )}
+        </Box>
+      </Box>
+
       {/* Right Section: Search, Profile, Notifications */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
         {/* Search Bar - Desktop Only */}
@@ -104,6 +156,7 @@ const NavBar = ({
         {/* Profile Icon */}
         <Tooltip title="Profile" placement="bottom">
           <IconButton
+            onClick={handleProfileClick}
             sx={{
               color: colors.iconColor,
               '&:hover': {
@@ -121,6 +174,7 @@ const NavBar = ({
         {/* Notifications Icon */}
         <Tooltip title="Notifications" placement="bottom">
           <IconButton
+            onClick={handleNotificationClick}
             sx={{
               color: colors.iconColor,
               '&:hover': {

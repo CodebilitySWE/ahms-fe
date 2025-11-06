@@ -272,9 +272,23 @@ function Profile() {
 
   return (
     <Box display="flex" minHeight="100vh">
-      <Sidebar role={user.role} />
-      <Box flex={1} display="flex" flexDirection="column" sx={{ minWidth: 0 }}>
-        <NavBar notificationCount={5} />
+      <Sidebar />
+      <Box
+        flex={1}
+        display="flex"
+        flexDirection="column"
+        sx={{
+          minWidth: 0,
+          ml: { xs: 0, sm: '280px' },
+        }}
+      >
+        <NavBar 
+          notificationCount={5}
+          // onSearch={handleSearch}
+          pageName="Profile"           // The current page name
+          userType={"/" + user.role.charAt(0).toUpperCase() + user.role.slice(1)}              // User type label
+          userRole={user.role}              // Role for navigation (student/admin/artisan)
+        />
         <Box
           component="main"
           sx={{
@@ -296,12 +310,12 @@ function Profile() {
             <Box
               sx={{
                 backgroundColor: '#d3d3d3',
-                width: { xs: '80%', md: '82%' },
+                width: { xs: '80%', md: '100%' },
                 height: '34%',
                 borderRadius: 4,
                 position: 'absolute',
                 top: 10,
-                left: { xs: 0, md: 266 },
+                left: { xs: 0, md: 0 },
                 zIndex: 0,
               }}
             />
@@ -309,10 +323,10 @@ function Profile() {
             <Card
               sx={{
                 maxWidth: '1110px',
-                width: { xs: '80%', md: '100%' },
+                width: { xs: '80%', md: '90%' },
                 mx: 0,
                 p: 4,
-                ml: { xs: 0, md: 40 },
+                ml: { xs: 0, md: 5 },
                 mt: 12,
                 display: 'flex',
                 height: 'auto',

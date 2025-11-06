@@ -26,7 +26,7 @@ const AppRoutes = () => {
       
       {/* Protected routes */}
       {StudentRoutes()}
-      {ArtisanRoutes()}
+      {/* {ArtisanRoutes()} */}
       {AdminRoutes()}
       
       {/* Special routes */}

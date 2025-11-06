@@ -16,7 +16,7 @@ const fetchNotifications = async (token) => {
     throw new Error("No auth token provided.");
   }
 
-  const API_BASE_URL = "https://ahms-be-obre.onrender.com";
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const response = await fetch(`${API_BASE_URL}/api/admin/dashboard/notifications?limit=5`, {
     headers: {
@@ -68,8 +68,8 @@ const Notification = () => {
           md: "400px", // Increased from 304px to 400px for desktop
         },
         minHeight: {
-          xs: 425,
-          md: 500, // Increased from 425 to 500 for desktop
+          xs: 300,
+          md: 300, // Increased from 425 to 500 for desktop
         },
         border: 1,
         borderRadius: 4,
@@ -85,14 +85,14 @@ const Notification = () => {
           fontWeight: "bold",
           color: "#44577C",
           marginBottom: 2,
-          fontSize: 20,
+          fontSize: 16,
         }}
       >
         Notifications
       </Typography>
 
       {notifications.length === 0 ? (
-        <Typography sx={{ textAlign: "center", color: "gray", fontSize: 18 }}>
+        <Typography sx={{ textAlign: "center", color: "gray", fontSize: 14 }}>
           No notifications to show
         </Typography>
       ) : (
@@ -124,12 +124,12 @@ const Notification = () => {
                   }}
                   sx={{ marginRight: 1 }}
                 >
-                  <ClearIcon sx={{ fontSize: 18 }} />
+                  <ClearIcon sx={{ fontSize: 14 }} />
                 </IconButton>
 
                 {msg.is_read && (
                   <CheckCircleOutlineIcon
-                    sx={{ color: "green", fontSize: 22, marginRight: 1 }}
+                    sx={{ color: "green", fontSize: 18, marginRight: 1 }}
                   />
                 )}
 
