@@ -63,10 +63,24 @@ const Dashboard = () => {
   }, [API_BASE_URL]);
 
   return (
-    <Box display="flex" minHeight="100vh" sx={{ backgroundColor: '#f5f5f5' }}>
-      <Sidebar role="admin" />
-      <Box flex={1} display="flex" flexDirection="column" sx={{ minWidth: 0 }}>
-        <NavBar userType="admin" pageTitle="Dashboard" />
+    <Box display="flex" minHeight="100vh">
+
+      <Sidebar />
+      <Box
+        flex={1}
+        display="flex"
+        flexDirection="column"
+        sx={{
+          minWidth: 0,
+          ml: { xs: 0, sm: '250px' },
+        }}
+      >
+        <NavBar 
+          notificationCount={5}
+          pageName="Dashboard"
+          userType="/Admin"
+          userRole="admin"
+        />
         
         <Box component="main" sx={{ p: 3, flexGrow: 1 }}>
           {/* Dashboard Cards Section */}
@@ -136,7 +150,7 @@ const Dashboard = () => {
             </Box>
             
             <Box flex={{ xs: '1 1 100%', md: '0 0 30%' }}>
-              <Notification />
+              <Notification role="admin" />
             </Box>
           </Box>
         </Box>

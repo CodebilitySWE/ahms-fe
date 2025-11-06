@@ -1,203 +1,228 @@
 import React, { useState, useEffect } from 'react';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import IconButton from '@mui/material/IconButton';
+import {
+  Box,
+  Typography,
+  Card,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  IconButton,
+  CircularProgress
+} from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { green, orange, red, yellow } from '@mui/material/colors';
 
-const OpenComplaints = ({ role }) => {
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const fetchOpenComplaints = async (token, role) => {
+  if (!token) {
+    throw new Error("No auth token provided.");
+  }
+
+  // Determine the correct endpoint based on role
+  const endpoint = role === 'admin'
+    ? `${API_BASE_URL}/api/admin/dashboard/complaints/open?limit=10&offset=0`
+    : `${API_BASE_URL}/api/student/dashboard/complaints/open?limit=10&offset=0`;
+
+  const response = await fetch(endpoint, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok || !data.success) {
+    throw new Error(data.message || "Failed to fetch open complaints");
+  }
+
+  return data.data || [];
+};
+
+const OpenComplaints = ({ role = 'student', limit = 3 }) => {
   const [complaints, setComplaints] = useState([]);
-
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchComplaints = async () => {
-      try {
-        const token = localStorage.getItem('authToken');
-        if (!token) {
-          throw new Error('Authentication failed');
-        }
+    const token = localStorage.getItem("authToken");
 
-        // Endpoints associated with different roles
-        let url = '';
-        if (role === 'admin') {
-          url = `${API_BASE_URL}/api/admin/dashboard/complaints/open`;
-        } else if (role === 'artisan') {
-          url = `${API_BASE_URL}/api/artisan/dashboard/complaints/open`;
-        } else if (role === 'student') {
-          url = `${API_BASE_URL}/api/student/dashboard/complaints/open`;
-        } else {
-          console.error('Invalid role:', role);
-          return;
-        }
+    fetchOpenComplaints(token, role)
+      .then((data) => {
+        setComplaints(data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error fetching open complaints:", err.message);
+        setLoading(false);
+      });
+  }, [role]);
 
-        const urlWithParams = new URL(url);
-        urlWithParams.searchParams.append('limit', '5');
-        urlWithParams.searchParams.append('offset', '0');
+  const getPriorityColor = (priority) => {
+    const p = priority?.toLowerCase();
+    if (p === 'urgent' || p === 'high') return '#ef5350';
+    if (p === 'medium') return '#ff9800';
+    if (p === 'low') return '#66bb6a';
+    return '#757575';
+  };
 
-        const response = await fetch(urlWithParams.toString(), {
-          method: 'GET',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-          },
-        });
-
-        const data = await response.json();
-        setComplaints(data.data || []);
-      } catch (error) {
-        console.error('Error fetching complaints:', error);
-      }
-    };
-
-    fetchComplaints();
-  }, [role, API_BASE_URL]);
-
-  const getPriorityStyle = (priority) => {
-    const level = priority?.toLowerCase() || '';
-    switch (level) {
-      case 'low':
-        return { backgroundColor: green[500], width: '25%' };
-      case 'medium':
-        return { backgroundColor: yellow[600], width: '50%' };
-      case 'high':
-        return { backgroundColor: orange[500], width: '75%' };
-      case 'urgent':
-        return { backgroundColor: red[500], width: '100%' };
-      default:
-        return { backgroundColor: '#aaa', width: '40%' };
-    }
+  const getPriorityWidth = (priority) => {
+    const p = priority?.toLowerCase();
+    if (p === 'urgent' || p === 'high') return '90%';
+    if (p === 'medium') return '60%';
+    if (p === 'low') return '30%';
+    return '0%';
   };
 
   return (
-    <Box
-      sx={{
-        width: '100%',
-        maxWidth: { xs: '100%', md: 750 },
-        backgroundColor: '#fff',
-        borderRadius: 2,
-        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-        overflow: 'hidden'
+    <Card 
+      sx={{ 
+        boxShadow: 2, 
+        borderRadius: 2, 
+        overflow: 'hidden', 
+        height: '100%',
+        minHeight: 300
       }}
     >
-      <Box
-        sx={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          p: 2.5,
-          borderBottom: '1px solid #e0e0e0'
+      <Box 
+        sx={{ 
+          p: 2, 
+          borderBottom: '1px solid #e0e0e0', 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center' 
         }}
       >
-        <Typography
-          variant="h6"
-          fontWeight="600"
-          sx={{ color: '#4a6785', fontSize: '1.1rem' }}
-        >
+        <Typography sx={{ fontWeight: 600, fontSize: 16, color: '#2c3e50' }}>
           Open Complaints
         </Typography>
         <IconButton size="small">
-          <MoreVertIcon />
+          <MoreVertIcon sx={{ fontSize: 20 }} />
         </IconButton>
       </Box>
 
-      <Box sx={{ overflowX: 'auto' }}>
-        <Table size="small">
-          <TableHead>
-            <TableRow>
-              <TableCell sx={{ color: '#666', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5 }}>
-                COMPLAINANT
-              </TableCell>
-              <TableCell align="center" sx={{ color: '#666', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5 }}>
-                ROOM NUMBER
-              </TableCell>
-              <TableCell align="center" sx={{ color: '#666', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5 }}>
-                PRIORITY
-              </TableCell>
-              <TableCell sx={{ color: '#666', fontWeight: 600, fontSize: '0.75rem', textTransform: 'uppercase', py: 1.5 }}>
-                PRIORITY LEVEL
-              </TableCell>
-            </TableRow>
-          </TableHead>
-
-          <TableBody>
-            {Array.isArray(complaints) && complaints.length > 0 ? (
-              complaints.map((c, index) => (
-                <TableRow 
-                  key={index} 
+      {loading ? (
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            py: 8 
+          }}
+        >
+          <CircularProgress size={40} sx={{ color: '#4caf50' }} />
+        </Box>
+      ) : (
+        <TableContainer>
+          <Table size="small">
+            <TableHead>
+              <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+                <TableCell 
                   sx={{ 
-                    height: 60,
-                    '&:hover': { backgroundColor: '#f9f9f9' },
-                    borderBottom: index === complaints.length - 1 ? 'none' : '1px solid #f0f0f0'
+                    fontWeight: 600, 
+                    color: '#666', 
+                    fontSize: 11, 
+                    textTransform: 'uppercase' 
                   }}
                 >
-                  <TableCell sx={{ fontWeight: 600, color: '#333', fontSize: '0.875rem' }}>
-                    {c.complainant_name || 'Unknown'}
-                  </TableCell>
-                  <TableCell align="center" sx={{ fontWeight: 500, color: '#555', fontSize: '0.875rem' }}>
-                    {String(c.room_number || c.room || '00').padStart(2, '0')}
-                  </TableCell>
-                  <TableCell align="center">
-                    <Box
-                      sx={{
-                        display: 'inline-block',
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: 1,
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        textTransform: 'capitalize',
-                        color: '#fff',
-                        backgroundColor: 
-                          c.priority?.toLowerCase() === 'low' ? green[500] :
-                          c.priority?.toLowerCase() === 'medium' ? yellow[700] :
-                          c.priority?.toLowerCase() === 'high' ? orange[600] :
-                          c.priority?.toLowerCase() === 'urgent' ? red[500] :
-                          '#999'
-                      }}
-                    >
-                      {c.priority || 'N/A'}
-                    </Box>
-                  </TableCell>
-                  <TableCell>
-                    <Box
-                      sx={{
-                        width: 100,
-                        height: 8,
-                        borderRadius: 4,
-                        backgroundColor: '#e0e0e0',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          height: '100%',
-                          borderRadius: 4,
-                          transition: 'width 0.3s ease',
-                          ...getPriorityStyle(c.priority),
-                        }}
-                      />
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={4} align="center" sx={{ py: 4, color: '#999' }}>
-                  No open complaints
+                  {role === 'admin' ? 'COMPLAINANT' : 'CATEGORY'}
+                </TableCell>
+                <TableCell 
+                  sx={{ 
+                    fontWeight: 600, 
+                    color: '#666', 
+                    fontSize: 11, 
+                    textTransform: 'uppercase' 
+                  }}
+                >
+                  ROOM/NUMBER
+                </TableCell>
+                <TableCell 
+                  sx={{ 
+                    fontWeight: 600, 
+                    color: '#666', 
+                    fontSize: 11, 
+                    textTransform: 'uppercase' 
+                  }}
+                >
+                  PRIORITY
+                </TableCell>
+                <TableCell 
+                  sx={{ 
+                    fontWeight: 600, 
+                    color: '#666', 
+                    fontSize: 11, 
+                    textTransform: 'uppercase' 
+                  }}
+                >
+                  PRIORITY LEVEL
                 </TableCell>
               </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </Box>
-    </Box>
+            </TableHead>
+            <TableBody>
+              {complaints.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={4} align="center" sx={{ py: 4, color: '#999' }}>
+                    No open complaints
+                  </TableCell>
+                </TableRow>
+              ) : (
+                complaints.slice(0, limit).map((complaint) => (
+                  <TableRow 
+                    key={complaint.id} 
+                    sx={{ 
+                      '&:hover': { bgcolor: '#f9f9f9' },
+                      cursor: 'pointer' 
+                    }}
+                  >
+                    <TableCell sx={{ fontSize: 13, color: '#2c3e50' }}>
+                      {role === 'admin' 
+                        ? (complaint.student_name || complaint.complainant || 'Unknown')
+                        : (complaint.category_name || complaint.title || 'Unknown')
+                      }
+                    </TableCell>
+                    <TableCell sx={{ fontSize: 13, color: '#5a6c7d' }}>
+                      {complaint.room_number || 'N/A'}
+                    </TableCell>
+                    <TableCell 
+                      sx={{ 
+                        fontSize: 13, 
+                        color: getPriorityColor(complaint.priority), 
+                        fontWeight: 500 
+                      }}
+                    >
+                      {complaint.priority || 'N/A'}
+                    </TableCell>
+                    <TableCell>
+                      <Box
+                        sx={{
+                          width: '100%',
+                          height: 6,
+                          bgcolor: '#e0e0e0',
+                          borderRadius: 1,
+                          overflow: 'hidden'
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            width: getPriorityWidth(complaint.priority),
+                            height: '100%',
+                            bgcolor: getPriorityColor(complaint.priority),
+                            transition: 'width 0.3s'
+                          }}
+                        />
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+      )}
+    </Card>
   );
 };
 

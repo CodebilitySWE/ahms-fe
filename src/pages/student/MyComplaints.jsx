@@ -34,6 +34,8 @@ function MyComplaints() {
   const [feedbackText, setFeedbackText] = useState('');
   const [rating, setRating] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [existingRating, setExistingRating] = useState(null);
+  const [loadingRating, setLoadingRating] = useState(false);
 
   useEffect(() => {
     fetchComplaints();
@@ -58,16 +60,50 @@ function MyComplaints() {
     }
   };
 
+  const fetchExistingRating = async (complaintId) => {
+    setLoadingRating(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/complaints/${complaintId}/rating`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          setExistingRating(data.data);
+          setRating(data.data.rating);
+          setFeedbackText(data.data.feedback || '');
+          return true;
+        }
+      }
+      return false;
+    } catch (error) {
+      console.error('Error fetching rating:', error);
+      return false;
+    } finally {
+      setLoadingRating(false);
+    }
+  };
+
   const handleViewDetails = (complaint) => {
     setSelectedComplaint(complaint);
     setDetailsOpen(true);
   };
 
-  const handleOpenFeedback = (complaint) => {
+  const handleOpenFeedback = async (complaint) => {
     setSelectedComplaint(complaint);
+    setExistingRating(null);
     setRating(0);
     setFeedbackText('');
     setFeedbackOpen(true);
+    
+    // Check if rating already exists
+    if (complaint.status?.toLowerCase() === 'completed') {
+      await fetchExistingRating(complaint.id);
+    }
   };
 
   const handleSubmitFeedback = async () => {
@@ -97,6 +133,7 @@ function MyComplaints() {
         setFeedbackOpen(false);
         setFeedbackText('');
         setRating(0);
+        setExistingRating(null);
         fetchComplaints();
       } else {
         alert(data.message || 'Failed to submit rating');
@@ -201,17 +238,23 @@ function MyComplaints() {
                 </Typography>
               </TableCell>
               <TableCell>
-                <Typography
-                  sx={{
-                    color: '#4caf50',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    '&:hover': { textDecoration: 'underline' }
-                  }}
-                  onClick={() => handleOpenFeedback(complaint)}
-                >
-                  Feedback
-                </Typography>
+                {complaint.status?.toLowerCase() === 'completed' ? (
+                  <Typography
+                    sx={{
+                      color: '#4caf50',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      '&:hover': { textDecoration: 'underline' }
+                    }}
+                    onClick={() => handleOpenFeedback(complaint)}
+                  >
+                    Rate
+                  </Typography>
+                ) : (
+                  <Typography sx={{ color: '#999', fontSize: 14 }}>
+                    N/A
+                  </Typography>
+                )}
               </TableCell>
             </TableRow>
           ))}
@@ -234,10 +277,9 @@ function MyComplaints() {
       >
         <NavBar 
           notificationCount={5}
-          // onSearch={handleSearch}
-          pageName="My Complaints"           // The current page name
-          userType="/Student"              // User type label
-          userRole="student"              // Role for navigation (student/admin/artisan)
+          pageName="My Complaints"
+          userType="/Student"
+          userRole="student"
         />
 
         <Box
@@ -250,14 +292,12 @@ function MyComplaints() {
             overflow: 'auto',
           }}
         >
-
           {loading ? (
             <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
               <CircularProgress sx={{ color: '#4caf50' }} />
             </Box>
           ) : (
             <>
-              {/* Open Complaints Section */}
               <Card sx={{ mb: 3, boxShadow: 3, borderRadius: 2, overflow: 'hidden' }}>
                 <Box
                   sx={{
@@ -280,7 +320,6 @@ function MyComplaints() {
                 )}
               </Card>
 
-              {/* Completed Complaints Section */}
               <Card sx={{ boxShadow: 3, borderRadius: 2, overflow: 'hidden' }}>
                 <Box
                   sx={{
@@ -385,60 +424,82 @@ function MyComplaints() {
 
       {/* Rating & Feedback Modal */}
       <Dialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} maxWidth="sm" fullWidth>
-        <DialogTitle sx={{ bgcolor: '#fff', color: '#000', fontWeight: 600 }}>
-          Rate & Submit Feedback
+        <DialogTitle sx={{ bgcolor: '#66bb6a', color: '#fff', fontWeight: 600 }}>
+          {existingRating ? 'Your Rating & Feedback' : 'Rate & Submit Feedback'}
         </DialogTitle>
         <DialogContent dividers sx={{ p: 3 }}>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-            {/* Rating Section */}
-            <Box>
-              <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14, mb: 1 }}>
-                Rating <span style={{ color: '#f44336' }}>*</span>
-              </Typography>
-              <Rating
-                name="complaint-rating"
-                value={rating}
-                onChange={(event, newValue) => {
-                  setRating(newValue);
-                }}
-                size="large"
-                sx={{
-                  fontSize: '2.5rem',
-                  '& .MuiRating-iconFilled': {
-                    color: '#fbbf24',
-                  },
-                  '& .MuiRating-iconHover': {
-                    color: '#fbbf24',
-                  },
-                }}
-              />
-              {rating > 0 && (
-                <Typography sx={{ fontSize: 14, color: '#666', mt: 1 }}>
-                  You selected {rating} star{rating !== 1 ? 's' : ''}
-                </Typography>
+          {loadingRating ? (
+            <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+              <CircularProgress sx={{ color: '#4caf50' }} />
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {existingRating && (
+                <Box sx={{ bgcolor: '#f0f7ff', p: 2, borderRadius: 1, mb: 1 }}>
+                  <Typography sx={{ fontSize: 14, color: '#1976d2', fontWeight: 500 }}>
+                    You have already rated this complaint on {new Date(existingRating.created_at).toLocaleDateString()}
+                  </Typography>
+                </Box>
               )}
-            </Box>
 
-            {/* Feedback Text Section */}
-            <Box>
-              <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14, mb: 1 }}>
-                Feedback (Optional)
-              </Typography>
-              <TextField
-                fullWidth
-                multiline
-                rows={6}
-                placeholder="Share your experience with the complaint resolution..."
-                value={feedbackText}
-                onChange={(e) => setFeedbackText(e.target.value)}
-                sx={{
-                  '& .MuiOutlinedInput-root': {
-                    borderRadius: 1
-                  }
-                }}
-              />
+              {/* Rating Section */}
+              <Box>
+                <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14, mb: 1 }}>
+                  Rating <span style={{ color: '#f44336' }}>*</span>
+                </Typography>
+                <Rating
+                  name="complaint-rating"
+                  value={rating}
+                  onChange={(event, newValue) => {
+                    if (!existingRating) {
+                      setRating(newValue);
+                    }
+                  }}
+                  readOnly={!!existingRating}
+                  size="large"
+                  sx={{
+                    fontSize: '2.5rem',
+                    '& .MuiRating-iconFilled': {
+                      color: '#fbbf24',
+                    },
+                    '& .MuiRating-iconHover': {
+                      color: '#fbbf24',
+                    },
+                  }}
+                />
+                {rating > 0 && (
+                  <Typography sx={{ fontSize: 14, color: '#666', mt: 1 }}>
+                    {rating} star{rating !== 1 ? 's' : ''}
+                  </Typography>
+                )}
+              </Box>
+
+              {/* Feedback Text Section */}
+              <Box>
+                <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14, mb: 1 }}>
+                  Feedback {!existingRating && '(Optional)'}
+                </Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={6}
+                  placeholder="Share your experience with the complaint resolution..."
+                  value={feedbackText}
+                  onChange={(e) => {
+                    if (!existingRating) {
+                      setFeedbackText(e.target.value);
+                    }
+                  }}
+                  disabled={!!existingRating}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      borderRadius: 1
+                    }
+                  }}
+                />
+              </Box>
             </Box>
-          </Box>
+          )}
         </DialogContent>
         <DialogActions sx={{ p: 2, gap: 1, justifyContent: 'flex-end' }}>
           <Button
@@ -446,30 +507,37 @@ function MyComplaints() {
               setFeedbackOpen(false);
               setFeedbackText('');
               setRating(0);
+              setExistingRating(null);
             }}
-            disabled={submitting}
             sx={{
               color: '#1976d2',
               textTransform: 'uppercase',
               fontWeight: 600
             }}
           >
-            Cancel
+            Close
           </Button>
-          <Button
-            onClick={handleSubmitFeedback}
-            disabled={!rating || submitting}
-            sx={{
-              color: '#1976d2',
-              textTransform: 'uppercase',
-              fontWeight: 600,
-              '&.Mui-disabled': {
-                color: '#ccc'
-              }
-            }}
-          >
-            {submitting ? 'Submitting...' : 'Submit'}
-          </Button>
+          {!existingRating && (
+            <Button
+              onClick={handleSubmitFeedback}
+              disabled={!rating || submitting}
+              sx={{
+                bgcolor: '#4caf50',
+                color: '#fff',
+                textTransform: 'uppercase',
+                fontWeight: 600,
+                '&:hover': {
+                  bgcolor: '#45a049'
+                },
+                '&.Mui-disabled': {
+                  bgcolor: '#ccc',
+                  color: '#666'
+                }
+              }}
+            >
+              {submitting ? 'Submitting...' : 'Submit'}
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
     </Box>
