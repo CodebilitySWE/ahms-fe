@@ -26,7 +26,7 @@ import Sidebar from "../../components/Reusable/Sidebar";
 import Navbar from "../../components/Reusable/NavBar";
 import { fetchUsers } from "../../utils/userUtils";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://ahms-be-obre.onrender.com";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const ManageUsers = () => {
   const [students, setStudents] = useState([]);

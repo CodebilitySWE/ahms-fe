@@ -50,7 +50,7 @@ function Statistics() {
     { type: 'Electrical', count: 135 }
   ]);
 
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://ahms-be-obre.onrender.com';
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     const fetchStatistics = async () => {
