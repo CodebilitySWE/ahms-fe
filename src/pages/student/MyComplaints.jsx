@@ -37,6 +37,16 @@ function MyComplaints() {
   const [existingRating, setExistingRating] = useState(null);
   const [loadingRating, setLoadingRating] = useState(false);
 
+  // Dark mode colors
+  const isDark = mode === 'dark';
+  const bgColor = isDark ? '#1e1e1e' : '#fff';
+  const textColor = isDark ? '#e0e0e0' : '#666';
+  const headerBg = isDark ? '#2a2a2a' : '#f5f5f5';
+  const hoverBg = isDark ? '#2a2a2a' : '#f0f0f0';
+  const oddRowBg = isDark ? '#1a1a1a' : '#fafafa';
+  const evenRowBg = isDark ? '#252525' : '#fff';
+  const borderColor = isDark ? '#3a3a3a' : '#e0e0e0';
+
   useEffect(() => {
     fetchComplaints();
   }, []);
@@ -100,7 +110,6 @@ function MyComplaints() {
     setFeedbackText('');
     setFeedbackOpen(true);
     
-    // Check if rating already exists
     if (complaint.status?.toLowerCase() === 'completed') {
       await fetchExistingRating(complaint.id);
     }
@@ -174,14 +183,14 @@ function MyComplaints() {
     <TableContainer>
       <Table>
         <TableHead>
-          <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-            <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>TYPE</TableCell>
-            <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>DESCRIPTION</TableCell>
-            <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>DATE</TableCell>
-            <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>STATUS</TableCell>
-            <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>ACTION</TableCell>
-            <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>PRIORITY</TableCell>
-            <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>FEEDBACK</TableCell>
+          <TableRow sx={{ bgcolor: headerBg }}>
+            <TableCell sx={{ fontWeight: 600, color: textColor, fontSize: 12 }}>TYPE</TableCell>
+            <TableCell sx={{ fontWeight: 600, color: textColor, fontSize: 12 }}>DESCRIPTION</TableCell>
+            <TableCell sx={{ fontWeight: 600, color: textColor, fontSize: 12 }}>DATE</TableCell>
+            <TableCell sx={{ fontWeight: 600, color: textColor, fontSize: 12 }}>STATUS</TableCell>
+            <TableCell sx={{ fontWeight: 600, color: textColor, fontSize: 12 }}>ACTION</TableCell>
+            <TableCell sx={{ fontWeight: 600, color: textColor, fontSize: 12 }}>PRIORITY</TableCell>
+            <TableCell sx={{ fontWeight: 600, color: textColor, fontSize: 12 }}>FEEDBACK</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -189,17 +198,17 @@ function MyComplaints() {
             <TableRow 
               key={complaint.id}
               sx={{ 
-                bgcolor: index % 2 === 0 ? '#fff' : '#fafafa',
-                '&:hover': { bgcolor: '#f0f0f0' }
+                bgcolor: index % 2 === 0 ? evenRowBg : oddRowBg,
+                '&:hover': { bgcolor: hoverBg }
               }}
             >
-              <TableCell sx={{ color: '#666' }}>{complaint.category_name}</TableCell>
-              <TableCell sx={{ color: '#666', maxWidth: 200 }}>
+              <TableCell sx={{ color: textColor }}>{complaint.category_name}</TableCell>
+              <TableCell sx={{ color: textColor, maxWidth: 200 }}>
                 {complaint.title?.length > 30 
                   ? `${complaint.title.substring(0, 30)}...` 
                   : complaint.title}
               </TableCell>
-              <TableCell sx={{ color: '#666' }}>
+              <TableCell sx={{ color: textColor }}>
                 {new Date(complaint.created_at).toLocaleDateString()}
               </TableCell>
               <TableCell>
@@ -288,7 +297,7 @@ function MyComplaints() {
             px: { xs: 2, sm: 3 },
             py: 3,
             flexGrow: 1,
-            backgroundColor: mode === 'dark' ? '#1a1a1a' : '#f5f5f5',
+            backgroundColor: isDark ? '#1a1a1a' : '#f5f5f5',
             overflow: 'auto',
           }}
         >
@@ -298,7 +307,14 @@ function MyComplaints() {
             </Box>
           ) : (
             <>
-              <Card sx={{ mb: 3, boxShadow: 3, borderRadius: 2, overflow: 'hidden' }}>
+              <Card sx={{ 
+                mb: 3, 
+                boxShadow: 3, 
+                borderRadius: 2, 
+                overflow: 'hidden',
+                bgcolor: bgColor,
+                border: isDark ? `1px solid ${borderColor}` : 'none'
+              }}>
                 <Box
                   sx={{
                     px: 3,
@@ -313,14 +329,20 @@ function MyComplaints() {
                 
                 {openComplaints.length === 0 ? (
                   <Box sx={{ p: 4, textAlign: 'center' }}>
-                    <Typography sx={{ color: '#999' }}>No open complaints</Typography>
+                    <Typography sx={{ color: textColor }}>No open complaints</Typography>
                   </Box>
                 ) : (
                   <ComplaintsTable complaints={openComplaints} />
                 )}
               </Card>
 
-              <Card sx={{ boxShadow: 3, borderRadius: 2, overflow: 'hidden' }}>
+              <Card sx={{ 
+                boxShadow: 3, 
+                borderRadius: 2, 
+                overflow: 'hidden',
+                bgcolor: bgColor,
+                border: isDark ? `1px solid ${borderColor}` : 'none'
+              }}>
                 <Box
                   sx={{
                     px: 3,
@@ -335,7 +357,7 @@ function MyComplaints() {
                 
                 {completedComplaints.length === 0 ? (
                   <Box sx={{ p: 4, textAlign: 'center' }}>
-                    <Typography sx={{ color: '#999' }}>No completed complaints</Typography>
+                    <Typography sx={{ color: textColor }}>No completed complaints</Typography>
                   </Box>
                 ) : (
                   <ComplaintsTable complaints={completedComplaints} />
@@ -347,29 +369,40 @@ function MyComplaints() {
       </Box>
 
       {/* Complaint Details Modal */}
-      <Dialog open={detailsOpen} onClose={() => setDetailsOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={detailsOpen} 
+        onClose={() => setDetailsOpen(false)} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: bgColor,
+            border: isDark ? `1px solid ${borderColor}` : 'none'
+          }
+        }}
+      >
         <DialogTitle sx={{ bgcolor: '#66bb6a', color: '#fff', fontWeight: 600 }}>
           Complaint Details
         </DialogTitle>
-        <DialogContent dividers sx={{ p: 3 }}>
+        <DialogContent dividers sx={{ p: 3, bgcolor: bgColor }}>
           {selectedComplaint && (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
               <Box>
-                <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Type:</Typography>
-                <Typography sx={{ fontSize: 16 }}>{selectedComplaint.category_name}</Typography>
+                <Typography sx={{ fontWeight: 600, color: textColor, fontSize: 14 }}>Type:</Typography>
+                <Typography sx={{ fontSize: 16, color: textColor }}>{selectedComplaint.category_name}</Typography>
               </Box>
               <Box>
-                <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Description:</Typography>
-                <Typography sx={{ fontSize: 16 }}>{selectedComplaint.title}</Typography>
+                <Typography sx={{ fontWeight: 600, color: textColor, fontSize: 14 }}>Description:</Typography>
+                <Typography sx={{ fontSize: 16, color: textColor }}>{selectedComplaint.title}</Typography>
               </Box>
               <Box>
-                <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Date:</Typography>
-                <Typography sx={{ fontSize: 16 }}>
+                <Typography sx={{ fontWeight: 600, color: textColor, fontSize: 14 }}>Date:</Typography>
+                <Typography sx={{ fontSize: 16, color: textColor }}>
                   {new Date(selectedComplaint.created_at).toLocaleDateString()}
                 </Typography>
               </Box>
               <Box>
-                <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Status:</Typography>
+                <Typography sx={{ fontWeight: 600, color: textColor, fontSize: 14 }}>Status:</Typography>
                 <Typography 
                   sx={{ 
                     fontSize: 16, 
@@ -381,7 +414,7 @@ function MyComplaints() {
                 </Typography>
               </Box>
               <Box>
-                <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Priority:</Typography>
+                <Typography sx={{ fontWeight: 600, color: textColor, fontSize: 14 }}>Priority:</Typography>
                 <Typography 
                   sx={{ 
                     fontSize: 16, 
@@ -394,20 +427,20 @@ function MyComplaints() {
               </Box>
               {selectedComplaint.admin_name && (
                 <Box>
-                  <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Assigned Admin:</Typography>
-                  <Typography sx={{ fontSize: 16 }}>{selectedComplaint.admin_name}</Typography>
+                  <Typography sx={{ fontWeight: 600, color: textColor, fontSize: 14 }}>Assigned Admin:</Typography>
+                  <Typography sx={{ fontSize: 16, color: textColor }}>{selectedComplaint.admin_name}</Typography>
                 </Box>
               )}
               {selectedComplaint.artisan_name && (
                 <Box>
-                  <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Assigned Artisan:</Typography>
-                  <Typography sx={{ fontSize: 16 }}>{selectedComplaint.artisan_name}</Typography>
+                  <Typography sx={{ fontWeight: 600, color: textColor, fontSize: 14 }}>Assigned Artisan:</Typography>
+                  <Typography sx={{ fontSize: 16, color: textColor }}>{selectedComplaint.artisan_name}</Typography>
                 </Box>
               )}
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 2, justifyContent: 'flex-end' }}>
+        <DialogActions sx={{ p: 2, justifyContent: 'flex-end', bgcolor: bgColor }}>
           <Button
             onClick={() => setDetailsOpen(false)}
             sx={{
@@ -423,11 +456,22 @@ function MyComplaints() {
       </Dialog>
 
       {/* Rating & Feedback Modal */}
-      <Dialog open={feedbackOpen} onClose={() => setFeedbackOpen(false)} maxWidth="sm" fullWidth>
+      <Dialog 
+        open={feedbackOpen} 
+        onClose={() => setFeedbackOpen(false)} 
+        maxWidth="sm" 
+        fullWidth
+        PaperProps={{
+          sx: {
+            bgcolor: bgColor,
+            border: isDark ? `1px solid ${borderColor}` : 'none'
+          }
+        }}
+      >
         <DialogTitle sx={{ bgcolor: '#66bb6a', color: '#fff', fontWeight: 600 }}>
           {existingRating ? 'Your Rating & Feedback' : 'Rate & Submit Feedback'}
         </DialogTitle>
-        <DialogContent dividers sx={{ p: 3 }}>
+        <DialogContent dividers sx={{ p: 3, bgcolor: bgColor }}>
           {loadingRating ? (
             <Box display="flex" justifyContent="center" alignItems="center" py={4}>
               <CircularProgress sx={{ color: '#4caf50' }} />
@@ -435,16 +479,15 @@ function MyComplaints() {
           ) : (
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               {existingRating && (
-                <Box sx={{ bgcolor: '#f0f7ff', p: 2, borderRadius: 1, mb: 1 }}>
+                <Box sx={{ bgcolor: isDark ? '#1a3a4a' : '#f0f7ff', p: 2, borderRadius: 1, mb: 1 }}>
                   <Typography sx={{ fontSize: 14, color: '#1976d2', fontWeight: 500 }}>
                     You have already rated this complaint on {new Date(existingRating.created_at).toLocaleDateString()}
                   </Typography>
                 </Box>
               )}
 
-              {/* Rating Section */}
               <Box>
-                <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14, mb: 1 }}>
+                <Typography sx={{ fontWeight: 600, color: textColor, fontSize: 14, mb: 1 }}>
                   Rating <span style={{ color: '#f44336' }}>*</span>
                 </Typography>
                 <Rating
@@ -468,15 +511,14 @@ function MyComplaints() {
                   }}
                 />
                 {rating > 0 && (
-                  <Typography sx={{ fontSize: 14, color: '#666', mt: 1 }}>
+                  <Typography sx={{ fontSize: 14, color: textColor, mt: 1 }}>
                     {rating} star{rating !== 1 ? 's' : ''}
                   </Typography>
                 )}
               </Box>
 
-              {/* Feedback Text Section */}
               <Box>
-                <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14, mb: 1 }}>
+                <Typography sx={{ fontWeight: 600, color: textColor, fontSize: 14, mb: 1 }}>
                   Feedback {!existingRating && '(Optional)'}
                 </Typography>
                 <TextField
@@ -493,15 +535,30 @@ function MyComplaints() {
                   disabled={!!existingRating}
                   sx={{
                     '& .MuiOutlinedInput-root': {
-                      borderRadius: 1
-                    }
+                      borderRadius: 1,
+                      bgcolor: isDark ? '#2a2a2a' : '#fff',
+                      color: textColor,
+                      '& fieldset': {
+                        borderColor: borderColor,
+                      },
+                      '&:hover fieldset': {
+                        borderColor: isDark ? '#555' : '#ccc',
+                      },
+                    },
+                    '& .MuiInputBase-input': {
+                      color: textColor,
+                    },
+                    '& .MuiInputBase-input::placeholder': {
+                      color: isDark ? '#888' : '#999',
+                      opacity: 1,
+                    },
                   }}
                 />
               </Box>
             </Box>
           )}
         </DialogContent>
-        <DialogActions sx={{ p: 2, gap: 1, justifyContent: 'flex-end' }}>
+        <DialogActions sx={{ p: 2, gap: 1, justifyContent: 'flex-end', bgcolor: bgColor }}>
           <Button
             onClick={() => {
               setFeedbackOpen(false);

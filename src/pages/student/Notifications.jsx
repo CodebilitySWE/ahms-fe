@@ -41,12 +41,30 @@ const fetchNotifications = async (token, offset = 0) => {
   return notifications;
 };
 
-const Notification = () => {
+const Notification = ({ mode }) => {
   const [notifications, setNotifications] = useState([]);
   const [expandedIds, setExpandedIds] = useState([]);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(true);
+
+  // Dark mode colors
+  const isDark = mode === 'dark';
+  const bgColor = isDark ? '#1e1e1e' : 'white';
+  const cardBg = isDark ? '#2a2a2a' : '#fff';
+  const readBg = isDark ? '#1e1e1e' : '#fff';
+  const unreadBg = isDark ? '#252525' : '#fafafa';
+  const hoverBg = isDark ? '#2a2a2a' : '#f9f9f9';
+  const hoverUnreadBg = isDark ? '#2d2d2d' : '#f5f5f5';
+  const textColor = isDark ? '#e0e0e0' : '#2c3e50';
+  const mutedText = isDark ? '#b0b0b0' : '#5a6c7d';
+  const lightText = isDark ? '#888' : '#95a5a6';
+  const borderColor = isDark ? '#3a3a3a' : '#e0e0e0';
+  const readBorder = isDark ? '#2a2a2a' : '#e9ecef';
+  const unreadBorder = isDark ? '#3a3a3a' : '#d0d0d0';
+  const expandedBg = isDark ? '#1a1a1a' : '#fafafa';
+  const detailCardBg = isDark ? '#252525' : 'white';
+  const dividerColor = isDark ? '#3a3a3a' : '#f0f0f0';
 
   useEffect(() => {
     const token = localStorage.getItem("authToken");
@@ -136,20 +154,17 @@ const Notification = () => {
         <CloseIcon sx={{ color: '#f44336', fontSize: 24, fontWeight: 700 }} />
       );
     } else{
-        // Default icon for submitted or other statuses (gray, no color)
         return (
           <CheckCircleIcon sx={{ color: '#9e9e9e', fontSize: 24 }} />
         );
     }
-    
-    
   };
 
   const getStatusColor = (status) => {
     const statusLower = status?.toLowerCase();
     if (statusLower === 'assigned') return '#4caf50';
     if (statusLower === 'rejected') return '#f44336';
-    if (statusLower !== 'assigned' || statusLower !== 'rejected') return '#2c3e50'; // Dark gray for submitted
+    if (statusLower !== 'assigned' || statusLower !== 'rejected') return isDark ? '#b0b0b0' : '#2c3e50';
   };
 
   if (loading) {
@@ -165,11 +180,13 @@ const Notification = () => {
       sx={{
         width: { xs: '90%', sm: '85%', md: 900 },
         minHeight: 425,
-        border: '1px solid #e0e0e0',
+        border: `1px solid ${borderColor}`,
         borderRadius: 3,
         padding: 3,
-        boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.08)',
-        backgroundColor: 'white',
+        boxShadow: isDark 
+          ? '0px 4px 12px rgba(0, 0, 0, 0.5)' 
+          : '0px 4px 12px rgba(0, 0, 0, 0.08)',
+        backgroundColor: bgColor,
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -179,7 +196,7 @@ const Notification = () => {
           variant="h5"
           sx={{
             fontWeight: 600,
-            color: '#2c3e50',
+            color: textColor,
             fontSize: 24,
           }}
         >
@@ -194,11 +211,11 @@ const Notification = () => {
             sx={{
               fontSize: 14,
               textTransform: 'none',
-              color: '#5a6c7d',
+              color: mutedText,
               fontWeight: 500,
               '&:hover': {
                 backgroundColor: 'transparent',
-                color: '#2c3e50'
+                color: textColor
               }
             }}
           >
@@ -209,7 +226,7 @@ const Notification = () => {
 
       {notifications.length === 0 ? (
         <Box sx={{ textAlign: "center", py: 8 }}>
-          <Typography sx={{ color: "#999", fontSize: 16 }}>
+          <Typography sx={{ color: lightText, fontSize: 16 }}>
             No notifications to show
           </Typography>
         </Box>
@@ -229,8 +246,8 @@ const Notification = () => {
               <Box
                 key={msg.id}
                 sx={{
-                  backgroundColor: msg.is_read ? '#fff' : '#fafafa',
-                  border: `1px solid ${msg.is_read ? '#e9ecef' : '#d0d0d0'}`,
+                  backgroundColor: msg.is_read ? readBg : unreadBg,
+                  border: `1px solid ${msg.is_read ? readBorder : unreadBorder}`,
                   borderRadius: 2,
                   overflow: 'hidden',
                   transition: 'all 0.2s ease'
@@ -244,7 +261,7 @@ const Notification = () => {
                     p: 2,
                     cursor: 'pointer',
                     '&:hover': {
-                      bgcolor: msg.is_read ? '#f9f9f9' : '#f5f5f5'
+                      bgcolor: msg.is_read ? hoverBg : hoverUnreadBg
                     }
                   }}
                   onClick={() => handleToggle(msg.id)}
@@ -256,7 +273,7 @@ const Notification = () => {
                       sx={{
                         fontSize: 14,
                         fontWeight: msg.is_read ? 400 : 500,
-                        color: '#2c3e50',
+                        color: textColor,
                         lineHeight: 1.5,
                       }}
                     >
@@ -268,7 +285,7 @@ const Notification = () => {
                     <Typography
                       sx={{
                         fontSize: 12,
-                        color: '#95a5a6',
+                        color: lightText,
                         mt: 0.5
                       }}
                     >
@@ -281,7 +298,7 @@ const Notification = () => {
                     sx={{
                       transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
                       transition: 'transform 0.3s',
-                      color: '#5a6c7d',
+                      color: mutedText,
                       mr: 1
                     }}
                   >
@@ -295,10 +312,10 @@ const Notification = () => {
                       handleDelete(msg.id);
                     }}
                     sx={{
-                      color: '#95a5a6',
+                      color: lightText,
                       '&:hover': {
                         color: '#e74c3c',
-                        backgroundColor: '#fee'
+                        backgroundColor: isDark ? '#3a1a1a' : '#fee'
                       }
                     }}
                   >
@@ -314,14 +331,14 @@ const Notification = () => {
                       pb: 3, 
                       pt: 1, 
                       pl: 7, 
-                      borderTop: '1px solid #f0f0f0',
-                      backgroundColor: '#fafafa'
+                      borderTop: `1px solid ${dividerColor}`,
+                      backgroundColor: expandedBg
                     }}
                   >
                     <Box
                       sx={{
-                        backgroundColor: 'white',
-                        border: '1px solid #e0e0e0',
+                        backgroundColor: detailCardBg,
+                        border: `1px solid ${borderColor}`,
                         borderRadius: 2,
                         p: 2,
                         mt: 1
@@ -329,40 +346,40 @@ const Notification = () => {
                     >
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#5a6c7d' }}>
+                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: mutedText }}>
                             Block:
                           </Typography>
-                          <Typography sx={{ fontSize: 13, color: '#2c3e50' }}>
+                          <Typography sx={{ fontSize: 13, color: textColor }}>
                             {msg.block || 'N/A'}
                           </Typography>
                         </Box>
                         
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#5a6c7d' }}>
+                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: mutedText }}>
                             Room No:
                           </Typography>
-                          <Typography sx={{ fontSize: 13, color: '#2c3e50' }}>
+                          <Typography sx={{ fontSize: 13, color: textColor }}>
                             {msg.room_number || msg.room_no || 'N/A'}
                           </Typography>
                         </Box>
                         
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#5a6c7d' }}>
+                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: mutedText }}>
                             Category:
                           </Typography>
-                          <Typography sx={{ fontSize: 13, color: '#2c3e50' }}>
+                          <Typography sx={{ fontSize: 13, color: textColor }}>
                             {msg.category_name || msg.category || 'N/A'}
                           </Typography>
                         </Box>
                         
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#5a6c7d' }}>
+                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: mutedText }}>
                             Description:
                           </Typography>
                           <Typography 
                             sx={{ 
                               fontSize: 13, 
-                              color: '#2c3e50',
+                              color: textColor,
                               maxWidth: '60%',
                               textAlign: 'right'
                             }}
@@ -372,10 +389,10 @@ const Notification = () => {
                         </Box>
                         
                         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: '#5a6c7d' }}>
+                          <Typography sx={{ fontSize: 13, fontWeight: 600, color: mutedText }}>
                             Date:
                           </Typography>
-                          <Typography sx={{ fontSize: 13, color: '#2c3e50' }}>
+                          <Typography sx={{ fontSize: 13, color: textColor }}>
                             {new Date(msg.created_at).toLocaleDateString()}
                           </Typography>
                         </Box>
@@ -398,13 +415,13 @@ const Notification = () => {
             sx={{
               textTransform: "none",
               fontWeight: 500,
-              color: "#5a6c7d",
-              borderColor: '#e0e0e0',
+              color: mutedText,
+              borderColor: borderColor,
               borderRadius: 2,
               px: 3,
               '&:hover': {
-                borderColor: '#5a6c7d',
-                backgroundColor: '#f8f9fa'
+                borderColor: mutedText,
+                backgroundColor: isDark ? '#2a2a2a' : '#f8f9fa'
               }
             }}
           >
@@ -433,10 +450,9 @@ function Notifications() {
       >
         <NavBar 
           notificationCount={5}
-          // onSearch={handleSearch}
-          pageName="Notifications"           // The current page name
-          userType="/Student"              // User type label
-          userRole="student"              // Role for navigation (student/admin/artisan)
+          pageName="Notifications"
+          userType="/Student"
+          userRole="student"
         />
         <Box
           sx={{
@@ -450,7 +466,7 @@ function Notifications() {
             ml: { xs: 0, sm: "0px", md: '0px' },
           }}
         >
-          <Notification />
+          <Notification mode={mode} />
         </Box>
       </Box>
     </Box>

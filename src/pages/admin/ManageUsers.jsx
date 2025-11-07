@@ -5,6 +5,7 @@ import {
   Button,
   Alert,
   Snackbar,
+  useTheme,
 } from "@mui/material";
 import { Add } from "@mui/icons-material";
 import axios from "axios";
@@ -24,6 +25,7 @@ import {
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 const ManageUsers = () => {
+  const theme = useTheme();
   const [students, setStudents] = useState([]);
   const [artisans, setArtisans] = useState([]);
   const [workTypes, setWorkTypes] = useState([]);
@@ -312,8 +314,11 @@ const ManageUsers = () => {
           flexGrow={1}
           ml={{ md: "0px" }}
           p={3}
-          bgcolor="#f8f4f4ff"
+          bgcolor={theme.palette.mode === 'dark' ? '#1e1e1e' : '#f8f4f4ff'}
           minHeight="100vh"
+          sx={{
+            color: theme.palette.text.primary,
+          }}
         >
           {loading ? (
             <Box display="flex" justifyContent="center" mt={5}>
@@ -374,7 +379,8 @@ const ManageUsers = () => {
                 ARTISAN_LIMIT,
                 handleViewArtisan,
                 handleArtisanPageChange,
-                artisanTotalPages
+                artisanTotalPages,
+                theme
               )}
               
               {renderStudentTable(
@@ -384,7 +390,8 @@ const ManageUsers = () => {
                 STUDENT_LIMIT,
                 handleViewStudent,
                 handleStudentPageChange,
-                studentTotalPages
+                studentTotalPages,
+                theme
               )}
             </>
           )}
@@ -399,7 +406,8 @@ const ManageUsers = () => {
         handleArtisanInputChange,
         workTypes,
         submitting,
-        handleSubmitArtisan
+        handleSubmitArtisan,
+        theme
       )}
 
       {renderWorkTypeModal(
@@ -408,19 +416,22 @@ const ManageUsers = () => {
         workTypeFormData,
         handleWorkTypeInputChange,
         submitting,
-        handleSubmitWorkType
+        handleSubmitWorkType,
+        theme
       )}
 
       {renderArtisanDetailModal(
         openArtisanDetailModal,
         handleCloseArtisanDetail,
-        selectedArtisan
+        selectedArtisan,
+        theme
       )}
 
       {renderStudentDetailModal(
         openStudentDetailModal,
         handleCloseStudentDetail,
-        selectedStudent
+        selectedStudent,
+        theme
       )}
 
       {/* Notification Snackbar */}

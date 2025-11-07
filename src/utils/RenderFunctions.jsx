@@ -27,97 +27,164 @@ export const renderArtisanTable = (
   ARTISAN_LIMIT,
   handleViewArtisan,
   handleArtisanPageChange,
-  artisanTotalPages
+  artisanTotalPages,
+  theme
 ) => (
-  <Box p={2} borderRadius={2} bgcolor="#fff" boxShadow={1} mb={4}>
-    <Typography 
-      variant="h6" 
-      sx={{ 
-        mb: 2, 
-        bgcolor: "#2DA94B", 
-        color: "#fff", 
-        p: 1.5, 
+  <Box
+    p={2}
+    borderRadius={2}
+    bgcolor={theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff'}
+    boxShadow={1}
+    mb={4}
+    color={theme.palette.text.primary}
+  >
+    <Typography
+      variant="h6"
+      sx={{
+        mb: 2,
+        bgcolor: "#2DA94B",
+        color: "#fff",
+        p: 1.5,
         borderRadius: 1,
-        fontWeight: 600
+        fontWeight: 600,
       }}
     >
       Artisans
     </Typography>
+
     <Table>
       <TableHead>
-        <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-          <TableCell sx={{ fontWeight: 600, color: "#666", textTransform: "uppercase", fontSize: "0.75rem" }}>
-            ARTISAN
-          </TableCell>
-          <TableCell sx={{ fontWeight: 600, color: "#666", textTransform: "uppercase", fontSize: "0.75rem" }}>
-            FUNCTION
-          </TableCell>
-          <TableCell sx={{ fontWeight: 600, color: "#666", textTransform: "uppercase", fontSize: "0.75rem" }}>
-            STATUS
-          </TableCell>
-          <TableCell sx={{ fontWeight: 600, color: "#666", textTransform: "uppercase", fontSize: "0.75rem" }}>
-            DETAILS
-          </TableCell>
+        <TableRow
+          sx={{
+            bgcolor: theme.palette.mode === 'dark' ? '#2b2b2b' : '#f5f5f5',
+          }}
+        >
+          {["ARTISAN", "FUNCTION", "STATUS", "DETAILS"].map((header) => (
+            <TableCell
+              key={header}
+              sx={{
+                fontWeight: 600,
+                color: theme.palette.mode === 'dark' ? '#bbb' : '#666',
+                textTransform: "uppercase",
+                fontSize: "0.75rem",
+              }}
+            >
+              {header}
+            </TableCell>
+          ))}
         </TableRow>
       </TableHead>
+
       <TableBody>
-        {artisans.length > 0 ? artisans.map((artisan) => (
-          <TableRow key={artisan.id} sx={{ "&:hover": { bgcolor: "#f9f9f9" } }}>
-            <TableCell>
-              <Box sx={{ fontWeight: 600, color: "#333" }}>{artisan.name}</Box>
-              <Typography variant="body2" color="textSecondary" sx={{ fontSize: "0.875rem" }}>
-                {artisan.email}
-              </Typography>
-            </TableCell>
-            <TableCell sx={{ color: "#666" }}>
-              {artisan.work_type || "-"}
-            </TableCell>
-            <TableCell>
-              <Typography
-                variant="caption"
-                sx={{
-                  backgroundColor: "#4caf50",
-                  color: "#fff",
-                  px: 2,
-                  py: 0.5,
-                  borderRadius: 2,
-                  display: "inline-block",
-                  fontWeight: 600,
-                  fontSize: "0.75rem"
-                }}
-              >
-                {artisan.status || "ONLINE"}
-              </Typography>
-            </TableCell>
-            <TableCell>
-              <Button 
-                variant="text" 
-                size="small"
-                onClick={() => handleViewArtisan(artisan)}
-                sx={{ 
-                  color: "#2DA94B",
-                  textTransform: "none",
-                  fontWeight: 500
-                }}
-              >
-                View
-              </Button>
-            </TableCell>
-          </TableRow>
-        )) : (
+        {artisans.length > 0 ? (
+          artisans.map((artisan) => (
+            <TableRow
+              key={artisan.id}
+              sx={{
+                "&:hover": {
+                  bgcolor:
+                    theme.palette.mode === "dark" ? "#2a2a2a" : "#f9f9f9",
+                },
+              }}
+            >
+              <TableCell>
+                <Box
+                  sx={{
+                    fontWeight: 600,
+                    color: theme.palette.text.primary,
+                  }}
+                >
+                  {artisan.name}
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: "0.875rem",
+                    color: theme.palette.text.secondary,
+                  }}
+                >
+                  {artisan.email}
+                </Typography>
+              </TableCell>
+
+              <TableCell sx={{ color: theme.palette.text.secondary }}>
+                {artisan.work_type || "-"}
+              </TableCell>
+
+              <TableCell>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    backgroundColor: "#4caf50",
+                    color: "#fff",
+                    px: 2,
+                    py: 0.5,
+                    borderRadius: 2,
+                    fontWeight: 600,
+                    fontSize: "0.75rem",
+                    display: "inline-block",
+                  }}
+                >
+                  {artisan.status || "ONLINE"}
+                </Typography>
+              </TableCell>
+
+              <TableCell>
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => handleViewArtisan(artisan)}
+                  sx={{
+                    color: "#2DA94B",
+                    textTransform: "none",
+                    fontWeight: 500,
+                  }}
+                >
+                  View
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))
+        ) : (
           <TableRow>
-            <TableCell colSpan={4} align="center" sx={{ py: 4, color: "#999" }}>
+            <TableCell
+              colSpan={4}
+              align="center"
+              sx={{
+                py: 4,
+                color:
+                  theme.palette.mode === "dark" ? "#777" : "#999",
+              }}
+            >
               No artisans found...
             </TableCell>
           </TableRow>
         )}
       </TableBody>
     </Table>
+
     {artisanTotalPages > 1 && (
-      <Box mt={2} display="flex" justifyContent="space-between" alignItems="center">
-        <Typography variant="body2" color="textSecondary">
-          Showing {artisans.length > 0 ? ((artisanPage - 1) * ARTISAN_LIMIT + 1) : 0} - {Math.min(artisanPage * ARTISAN_LIMIT, artisanPagination.total)} of {artisanPagination.total} artisans
+      <Box
+        mt={2}
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+      >
+        <Typography
+          variant="body2"
+          sx={{
+            color: theme.palette.text.secondary,
+          }}
+        >
+          Showing{" "}
+          {artisans.length > 0
+            ? (artisanPage - 1) * ARTISAN_LIMIT + 1
+            : 0}{" "}
+          -{" "}
+          {Math.min(artisanPage * ARTISAN_LIMIT, artisanPagination.total)} of{" "}
+          {artisanPagination.total} artisans
         </Typography>
+
         <Pagination
           count={artisanTotalPages}
           page={artisanPage}
@@ -126,9 +193,12 @@ export const renderArtisanTable = (
           sx={{
             '& .MuiPaginationItem-root': {
               borderRadius: '8px',
-              backgroundColor: 'white',
-              border: '1px solid #e0e0e0',
-              color: '#666',
+              backgroundColor:
+                theme.palette.mode === 'dark' ? '#2b2b2b' : 'white',
+              border: `1px solid ${
+                theme.palette.mode === 'dark' ? '#444' : '#e0e0e0'
+              }`,
+              color: theme.palette.text.primary,
               fontWeight: 500,
               '&.Mui-selected': {
                 backgroundColor: '#2DA94B',
@@ -136,15 +206,17 @@ export const renderArtisanTable = (
                 border: '1px solid #2DA94B',
               },
               '&:hover': {
-                backgroundColor: '#f0f0f0',
-              }
-            }
+                backgroundColor:
+                  theme.palette.mode === 'dark' ? '#3a3a3a' : '#f0f0f0',
+              },
+            },
           }}
         />
       </Box>
     )}
   </Box>
 );
+
 
 // Student Table Render Function
 export const renderStudentTable = (
@@ -154,98 +226,164 @@ export const renderStudentTable = (
   STUDENT_LIMIT,
   handleViewStudent,
   handleStudentPageChange,
-  studentTotalPages
+  studentTotalPages,
+  theme
 ) => (
-  <Box p={2} borderRadius={2} bgcolor="#fff" boxShadow={1}>
-    <Typography 
-      variant="h6" 
-      sx={{ 
-        mb: 2, 
-        bgcolor: "#2DA94B", 
-        color: "#fff", 
-        p: 1.5, 
+  <Box
+    p={2}
+    borderRadius={2}
+    bgcolor={theme.palette.mode === 'dark' ? '#1e1e1e' : '#fff'}
+    boxShadow={1}
+    color={theme.palette.text.primary}
+  >
+    <Typography
+      variant="h6"
+      sx={{
+        mb: 2,
+        bgcolor: "#2DA94B",
+        color: "#fff",
+        p: 1.5,
         borderRadius: 1,
         fontWeight: 600
       }}
     >
       Students
     </Typography>
+
     <Table>
       <TableHead>
-        <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-          <TableCell sx={{ fontWeight: 600, color: "#666", textTransform: "uppercase", fontSize: "0.75rem" }}>
-            STUDENTS
-          </TableCell>
-          <TableCell sx={{ fontWeight: 600, color: "#666", textTransform: "uppercase", fontSize: "0.75rem" }}>
-            ROOM NO
-          </TableCell>
-          <TableCell sx={{ fontWeight: 600, color: "#666", textTransform: "uppercase", fontSize: "0.75rem" }}>
-            ID
-          </TableCell>
-          <TableCell sx={{ fontWeight: 600, color: "#666", textTransform: "uppercase", fontSize: "0.75rem" }}>
-            DETAILS
-          </TableCell>
+        <TableRow
+          sx={{
+            bgcolor: theme.palette.mode === 'dark' ? '#2b2b2b' : '#f5f5f5'
+          }}
+        >
+          {["STUDENTS", "ROOM NO", "ID", "DETAILS"].map((header) => (
+            <TableCell
+              key={header}
+              sx={{
+                fontWeight: 600,
+                color: theme.palette.mode === 'dark' ? '#bbb' : '#666',
+                textTransform: "uppercase",
+                fontSize: "0.75rem"
+              }}
+            >
+              {header}
+            </TableCell>
+          ))}
         </TableRow>
       </TableHead>
+
       <TableBody>
-        {students.length > 0 ? students.map((student) => (
-          <TableRow key={student.id} sx={{ "&:hover": { bgcolor: "#f9f9f9" } }}>
-            <TableCell>
-              <Box sx={{ fontWeight: 600, color: "#333" }}>{student.name}</Box>
-              <Typography variant="body2" color="textSecondary" sx={{ fontSize: "0.875rem" }}>
-                {student.email}
-              </Typography>
-            </TableCell>
-            <TableCell sx={{ color: "#666" }}>{student.room_number || "-"}</TableCell>
-            <TableCell sx={{ color: "#666" }}>{student.student_id || "-"}</TableCell>
-            <TableCell>
-              <Button 
-                variant="text" 
-                size="small"
-                onClick={() => handleViewStudent(student)}
-                sx={{ 
-                  color: "#2DA94B",
-                  textTransform: "none",
-                  fontWeight: 500
-                }}
-              >
-                View
-              </Button>
-            </TableCell>
-          </TableRow>
-        )) : (
+        {students.length > 0 ? (
+          students.map((student) => (
+            <TableRow
+              key={student.id}
+              sx={{
+                "&:hover": {
+                  bgcolor:
+                    theme.palette.mode === "dark" ? "#2a2a2a" : "#f9f9f9"
+                }
+              }}
+            >
+              <TableCell>
+                <Box sx={{ fontWeight: 600, color: theme.palette.text.primary }}>
+                  {student.name}
+                </Box>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontSize: "0.875rem",
+                    color: theme.palette.text.secondary
+                  }}
+                >
+                  {student.email}
+                </Typography>
+              </TableCell>
+
+              <TableCell sx={{ color: theme.palette.text.secondary }}>
+                {student.room_number || "-"}
+              </TableCell>
+
+              <TableCell sx={{ color: theme.palette.text.secondary }}>
+                {student.student_id || "-"}
+              </TableCell>
+
+              <TableCell>
+                <Button
+                  variant="text"
+                  size="small"
+                  onClick={() => handleViewStudent(student)}
+                  sx={{
+                    color: "#2DA94B",
+                    textTransform: "none",
+                    fontWeight: 500
+                  }}
+                >
+                  View
+                </Button>
+              </TableCell>
+            </TableRow>
+          ))
+        ) : (
           <TableRow>
-            <TableCell colSpan={4} align="center" sx={{ py: 4, color: "#999" }}>
+            <TableCell
+              colSpan={4}
+              align="center"
+              sx={{
+                py: 4,
+                color: theme.palette.mode === "dark" ? "#777" : "#999"
+              }}
+            >
               No students found...
             </TableCell>
           </TableRow>
         )}
       </TableBody>
     </Table>
+
     {studentTotalPages > 1 && (
-      <Box mt={2} display="flex" justifyContent="space-between" alignItems="center">
-        <Typography variant="body2" color="textSecondary">
-          Showing {students.length > 0 ? ((studentPage - 1) * STUDENT_LIMIT + 1) : 0} - {Math.min(studentPage * STUDENT_LIMIT, studentPagination.total)} of {studentPagination.total} students
+      <Box
+        mt={2}
+        display="flex"
+        justifyContent="space-between"
+        alignItems="center"
+      >
+        <Typography
+          variant="body2"
+          sx={{ color: theme.palette.text.secondary }}
+        >
+          Showing{" "}
+          {students.length > 0
+            ? (studentPage - 1) * STUDENT_LIMIT + 1
+            : 0}{" "}
+          -{" "}
+          {Math.min(studentPage * STUDENT_LIMIT, studentPagination.total)} of{" "}
+          {studentPagination.total} students
         </Typography>
+
         <Pagination
           count={studentTotalPages}
           page={studentPage}
           onChange={handleStudentPageChange}
           shape="rounded"
           sx={{
-            '& .MuiPaginationItem-root': {
-              borderRadius: '8px',
-              backgroundColor: 'white',
-              border: '1px solid #e0e0e0',
-              color: '#666',
+            "& .MuiPaginationItem-root": {
+              borderRadius: "8px",
+              backgroundColor:
+                theme.palette.mode === "dark" ? "#2b2b2b" : "#fff",
+              border: `1px solid ${
+                theme.palette.mode === "dark" ? "#444" : "#e0e0e0"
+              }`,
+              color: theme.palette.text.primary,
               fontWeight: 500,
-              '&.Mui-selected': {
-                backgroundColor: '#2DA94B',
-                color: '#fff',
-                border: '1px solid #2DA94B',
+              "&.Mui-selected": {
+                backgroundColor: "#2DA94B",
+                color: "#fff",
+                border: "1px solid #2DA94B"
               },
-              '&:hover': {
-                backgroundColor: '#f0f0f0',
+              "&:hover": {
+                backgroundColor:
+                  theme.palette.mode === "dark" ? "#3a3a3a" : "#f0f0f0"
               }
             }
           }}
@@ -254,6 +392,7 @@ export const renderStudentTable = (
     )}
   </Box>
 );
+
 
 // Add Artisan Modal
 export const renderArtisanModal = (

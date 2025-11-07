@@ -55,6 +55,25 @@ function Complaints() {
 
   const rowsPerPage = 5;
 
+  // Format date function
+  const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    
+    const date = new Date(dateString);
+    
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    
+    const options = {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    };
+    
+    return date.toLocaleDateString('en-US', options);
+  };
+
   const getComplaints = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/admin/dashboard/complaints/open`, {
@@ -202,7 +221,7 @@ function Complaints() {
     
     await getComplaintDetails(complaint.id);
     
-    if (complaint.status !== 'assigned') {
+    if (complaint.status === 'submitted') {
       getAvailableArtisans(complaint.id);
     }
   };
@@ -335,9 +354,28 @@ function Complaints() {
                     minWidth: 180,
                     '& .MuiOutlinedInput-notchedOutline': { border: 'none' },
                   }}
+                  MenuProps={{
+                    PaperProps: {
+                      sx: {
+                        bgcolor: isDarkMode ? '#1a1a1a' : '#fff',
+                        '& .MuiMenuItem-root': {
+                          color: isDarkMode ? '#e0e0e0' : '#333',
+                          '&:hover': {
+                            bgcolor: isDarkMode ? '#2a2a2a' : '#f5f5f5',
+                          },
+                          '&.Mui-selected': {
+                            bgcolor: isDarkMode ? '#2a2a2a' : '#e8f5e9',
+                            '&:hover': {
+                              bgcolor: isDarkMode ? '#333' : '#c8e6c9',
+                            },
+                          },
+                        },
+                      },
+                    },
+                  }}
                 >
                   <MenuItem value="All">Filter by</MenuItem>
-                  <MenuItem disabled divider sx={{ backgroundColor: '#f5f5f5', color: '#666' }}>
+                  <MenuItem disabled divider sx={{ backgroundColor: isDarkMode ? '#2a2a2a' : '#f5f5f5', color: isDarkMode ? '#999' : '#666' }}>
                     Filter by Type
                   </MenuItem>
                   <MenuItem value="type_Electrical">Type: Electrical</MenuItem>
@@ -345,21 +383,21 @@ function Complaints() {
                   <MenuItem value="type_Carpentry">Type: Carpentry</MenuItem>
                   <MenuItem value="type_Cleaning">Type: Cleaning</MenuItem>
                   
-                  <MenuItem disabled divider sx={{ backgroundColor: '#f5f5f5', color: '#666' }}>
+                  <MenuItem disabled divider sx={{ backgroundColor: isDarkMode ? '#2a2a2a' : '#f5f5f5', color: isDarkMode ? '#999' : '#666' }}>
                     Filter by Priority
                   </MenuItem>
                   <MenuItem value="priority_High">Priority: High</MenuItem>
                   <MenuItem value="priority_Medium">Priority: Medium</MenuItem>
                   <MenuItem value="priority_Low">Priority: Low</MenuItem>
                   
-                  <MenuItem disabled divider sx={{ backgroundColor: '#f5f5f5', color: '#666' }}>
+                  <MenuItem disabled divider sx={{ backgroundColor: isDarkMode ? '#2a2a2a' : '#f5f5f5', color: isDarkMode ? '#999' : '#666' }}>
                     Filter by Status
                   </MenuItem>
                   <MenuItem value="status_InProgress">Status: In Progress</MenuItem>
                   <MenuItem value="status_Completed">Status: Completed</MenuItem>
                   <MenuItem value="status_Pending">Status: Pending</MenuItem>
                   
-                  <MenuItem disabled divider sx={{ backgroundColor: '#f5f5f5', color: '#666' }}>
+                  <MenuItem disabled divider sx={{ backgroundColor: isDarkMode ? '#2a2a2a' : '#f5f5f5', color: isDarkMode ? '#999' : '#666' }}>
                     Filter by Date
                   </MenuItem>
                   <MenuItem value="date_today">Today</MenuItem>
@@ -408,7 +446,7 @@ function Complaints() {
                           </TableCell>
                           <TableCell sx={{ color: isDarkMode ? '#e0e0e0' : '#333' }}>{checkRoomNumber(item.room_number)}</TableCell>
                           <TableCell sx={{ color: isDarkMode ? '#aaa' : '#666' }}>{item.title}</TableCell>
-                          <TableCell sx={{ color: isDarkMode ? '#aaa' : '#666' }}>{item.created_at}</TableCell>
+                          <TableCell sx={{ color: isDarkMode ? '#aaa' : '#666' }}>{formatDate(item.created_at)}</TableCell>
                           <TableCell sx={{ color: isDarkMode ? '#aaa' : '#666' }}>{item.status}</TableCell>
                           <TableCell>
                             <Typography
@@ -444,7 +482,7 @@ function Complaints() {
                                   <CancelIcon />
                                 </IconButton>
                               </Box>
-                            ) : item.status === 'assigned' ? (
+                            ) : item.status === 'assigned' || item.status === 'in progress' ? (
                               <Typography sx={{ color: '#2e7d32', fontWeight: 600 }}>Accepted</Typography>
                             ) : item.status === 'rejected' ? (
                               <Typography sx={{ color: '#d32f2f', fontWeight: 600 }}>Declined</Typography>
@@ -515,7 +553,7 @@ function Complaints() {
                   </Box>
                   <Box>
                     <Typography sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 14 }}>Date:</Typography>
-                    <Typography sx={{ fontSize: 16, color: isDarkMode ? '#e0e0e0' : '#333' }}>{selectedComplaint.created_at}</Typography>
+                    <Typography sx={{ fontSize: 16, color: isDarkMode ? '#e0e0e0' : '#333' }}>{formatDate(selectedComplaint.created_at)}</Typography>
                   </Box>
                   <Box>
                     <Typography sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 14 }}>Status:</Typography>
@@ -532,11 +570,48 @@ function Complaints() {
             <Box sx={{ width: 320, bgcolor: isDarkMode ? '#222' : '#fff' }}>
               <Box sx={{ bgcolor: isDarkMode ? '#2a2a2a' : '#f5f5f5', p: 2, borderBottom: `1px solid ${isDarkMode ? '#333' : '#e0e0e0'}` }}>
                 <Typography sx={{ fontWeight: 600, fontSize: 14, color: isDarkMode ? '#e0e0e0' : '#333' }}>
-                  {selectedComplaint?.status !== 'assigned' ? 'Assigned to' : 'Assign task to'}
+                  {selectedComplaint?.status === 'submitted' ? 'Assign task to' : 'Assigned to'}
                 </Typography>
               </Box>
               
-              {selectedComplaint?.status === 'assigned' ? (
+              {selectedComplaint?.status === 'submitted' ? (
+                loadingArtisans ? (
+                  <Box display="flex" justifyContent="center" alignItems="center" py={4}>
+                    <CircularProgress size={30} sx={{ color: '#66bb6a' }} />
+                  </Box>
+                ) : availableArtisans.length > 0 ? (
+                  <List sx={{ p: 0, maxHeight: 350, overflow: 'auto' }}>
+                    {availableArtisans.map((artisan, index) => (
+                      <ListItem
+                        key={index}
+                        disabled={loading}
+                        sx={{
+                          borderBottom: index < availableArtisans.length - 1 ? `1px solid ${isDarkMode ? '#333' : '#f0f0f0'}` : 'none',
+                          py: 1.5,
+                          px: 2,
+                          opacity: loading ? 0.5 : 1,
+                          cursor: loading ? 'not-allowed' : 'pointer',
+                          '&:hover': !loading ? { bgcolor: isDarkMode ? '#2a2a2a' : '#f9f9f9' } : {},
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center'
+                        }}
+                        onClick={() => !loading && handleAssignArtisan(artisan)}
+                      >
+                        <Box>
+                          <Typography sx={{ fontWeight: 500, color: isDarkMode ? '#e0e0e0' : '#333' }}>
+                            {artisan.name || artisan.artisan_name || 'Unknown'}
+                          </Typography>
+                        </Box>
+                      </ListItem>
+                    ))}
+                  </List>
+                ) : (
+                  <Box sx={{ p: 3, textAlign: 'center' }}>
+                    <Typography sx={{ color: isDarkMode ? '#666' : '#999' }}>No available artisans found</Typography>
+                  </Box>
+                )
+              ) : (
                 <Box sx={{ p: 3 }}>
                   <Box
                     sx={{
@@ -551,49 +626,14 @@ function Complaints() {
                   >
                     <CheckCircleIcon sx={{ color: '#2e7d32' }} />
                     <Typography sx={{ fontWeight: 500, color: '#2e7d32' }}>
-                      {selectedComplaint.assigned_artisan_name || 
-                        selectedComplaint.artisan_name || 
+                      {selectedComplaint?.assigned_artisan_name || 
+                        selectedComplaint?.artisan_name || 
                         'Assigned Artisan'}
                     </Typography>
                   </Box>
                   <Typography sx={{ mt: 2, fontSize: 12, color: isDarkMode ? '#aaa' : '#666', textAlign: 'center' }}>
-                    This complaint has already been assigned
+                    This complaint has been assigned
                   </Typography>
-                </Box>
-              ) : loadingArtisans ? (
-                <Box display="flex" justifyContent="center" alignItems="center" py={4}>
-                  <CircularProgress size={30} sx={{ color: '#66bb6a' }} />
-                </Box>
-              ) : availableArtisans.length > 0 ? (
-                <List sx={{ p: 0, maxHeight: 350, overflow: 'auto' }}>
-                  {availableArtisans.map((artisan, index) => (
-                    <ListItem
-                      key={index}
-                      disabled={loading}
-                      sx={{
-                        borderBottom: index < availableArtisans.length - 1 ? `1px solid ${isDarkMode ? '#333' : '#f0f0f0'}` : 'none',
-                        py: 1.5,
-                        px: 2,
-                        opacity: loading ? 0.5 : 1,
-                        cursor: loading ? 'not-allowed' : 'pointer',
-                        '&:hover': !loading ? { bgcolor: isDarkMode ? '#2a2a2a' : '#f9f9f9' } : {},
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center'
-                      }}
-                      onClick={() => !loading && handleAssignArtisan(artisan)}
-                    >
-                      <Box>
-                        <Typography sx={{ fontWeight: 500, color: isDarkMode ? '#e0e0e0' : '#333' }}>
-                          {artisan.name || artisan.artisan_name || 'Unknown'}
-                        </Typography>
-                      </Box>
-                    </ListItem>
-                  ))}
-                </List>
-              ) : (
-                <Box sx={{ p: 3, textAlign: 'center' }}>
-                  <Typography sx={{ color: isDarkMode ? '#666' : '#999' }}>No available artisans found</Typography>
                 </Box>
               )}
             </Box>

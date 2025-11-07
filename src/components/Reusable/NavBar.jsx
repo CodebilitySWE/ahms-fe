@@ -1,18 +1,14 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Typography,
-  InputBase,
   IconButton,
   Badge,
   useTheme,
-  useMediaQuery,
-  Paper,
   Tooltip,
 } from '@mui/material';
 import {
-  Search as SearchIcon,
   Notifications as NotificationsIcon,
   AccountCircle,
   Home as HomeIcon,
@@ -20,21 +16,12 @@ import {
 
 const NavBar = ({
   notificationCount = 0,
-  onSearch = () => {},
   pageName = '',
   userType = '',
   userRole = '', // 'student', 'admin', or 'artisan'
 }) => {
   const theme = useTheme();
   const navigate = useNavigate();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
-  const [searchValue, setSearchValue] = useState('');
-
-  const handleSearchChange = (e) => {
-    setSearchValue(e.target.value);
-    onSearch(e.target.value);
-  };
 
   const handleProfileClick = () => {
     navigate(`/${userRole}/profile`);
@@ -46,8 +33,6 @@ const NavBar = ({
 
   // Color scheme based on your design
   const colors = {
-    searchBorder: '#e0e6ed',
-    searchText: '#7c8592',
     iconColor: '#9fa8b3',
     iconHover: '#6b7d92',
     pageNameColor: '#2c3e50',
@@ -107,52 +92,8 @@ const NavBar = ({
         </Box>
       </Box>
 
-      {/* Right Section: Search, Profile, Notifications */}
+      {/* Right Section: Profile and Notifications */}
       <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
-        {/* Search Bar - Desktop Only */}
-        {!isMobile && (
-          <Box sx={{ position: 'relative' }}>
-            <Paper
-              elevation={0}
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                border: `1px solid ${colors.searchBorder}`,
-                borderRadius: 2.5,
-                px: 2,
-                py: 1,
-                minWidth: { sm: 200, md: 250, lg: 300 },
-                bgcolor: 'transparent',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  border: `1px solid ${theme.palette.primary.light}`,
-                  boxShadow: '0 0 0 2px rgba(45, 169, 75, 0.1)',
-                },
-                '&:focus-within': {
-                  border: `1px solid ${theme.palette.primary.main}`,
-                  boxShadow: '0 0 0 3px rgba(45, 169, 75, 0.15)',
-                },
-              }}
-            >
-              <SearchIcon sx={{ color: colors.iconColor, mr: 1, fontSize: 20 }} />
-              <InputBase
-                placeholder="Search here"
-                value={searchValue}
-                onChange={handleSearchChange}
-                sx={{
-                  color: colors.searchText,
-                  fontSize: '0.9rem',
-                  width: '100%',
-                  '&::placeholder': {
-                    color: colors.searchText,
-                    opacity: 0.7,
-                  },
-                }}
-              />
-            </Paper>
-          </Box>
-        )}
-
         {/* Profile Icon */}
         <Tooltip title="Profile" placement="bottom">
           <IconButton
