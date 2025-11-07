@@ -1,7 +1,6 @@
 {
   "name": "ahms-fe",
   "private": true,
-  "workspaces": [],
   "version": "0.0.0",
   "type": "module",
   "scripts": {
