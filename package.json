@@ -4,7 +4,6 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "postinstall": "shx test -d node_modules/patch-package && patch-package || shx echo 'patch-package not available'",
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
@@ -21,8 +20,6 @@
     "dotenv": "^16.5.0",
     "formik": "^2.4.6",
     "lucide-react": "^0.552.0",
-    "patch-package": "^8.0.1",
-    "postinstall-postinstall": "^2.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-responsive": "^10.0.1",
