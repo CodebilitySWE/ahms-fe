@@ -118,6 +118,9 @@ function Complaints() {
       if (response.ok && data.success) {
         alert(`Complaint assigned to ${artisan.name || artisan.artisan_name || 'artisan'} successfully.`);
         
+        // Refresh complaints list
+        await getComplaints();
+        
         // Close modal
         handleCloseModal();
       } else {
@@ -167,19 +170,41 @@ function Complaints() {
     }
   };
 
-
-
   useEffect(() => {
     getComplaints();
   }, [API_BASE_URL]);
 
   const handlePageChange = (event, value) => setPage(value);
 
-  const handleViewClick = (complaint) => {
+  const getComplaintDetails = async (complaintId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/complaints/${complaintId}`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('authToken')}`
+        }
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSelectedComplaint(data.data);
+        console.log('Complaint details:', data.data);
+      }
+    } catch (error) {
+      console.error('Error fetching complaint details:', error);
+    }
+  };
+
+  const handleViewClick = async (complaint) => {
     setSelectedComplaint(complaint);
     setIsModalOpen(true);
-    // Fetch available artisans for this complaint
-    getAvailableArtisans(complaint.id);
+    
+    // Fetch full complaint details to get assigned artisan info
+    await getComplaintDetails(complaint.id);
+    
+    // Only fetch available artisans if complaint is not already assigned
+    if (complaint.status !== 'assigned') {
+      getAvailableArtisans(complaint.id);
+    }
   };
 
   const handleCloseModal = () => {
@@ -195,8 +220,6 @@ function Complaints() {
     }));
     setPage(1);
   };
-
-  
 
   const filteredComplaints = complaints.filter((item) => {
     if (filters.type === 'All') return true;
@@ -263,10 +286,9 @@ function Complaints() {
       >
         <NavBar 
           notificationCount={5}
-          // onSearch={handleSearch}
-          pageName="Complaints"           // The current page name
-          userType="/Admin"              // User type label
-          userRole="admin"              // Role for navigation (student/admin/artisan)
+          pageName="Complaints"
+          userType="/Admin"
+          userRole="admin"
         />
 
         <Box
@@ -279,8 +301,6 @@ function Complaints() {
             overflow: 'auto',
           }}
         >
-
-
           {/* Main Table Card */}
           <Card sx={{ boxShadow: 3, borderRadius: 2, overflow: 'hidden' }}>
             {/* Header - Green */}
@@ -426,8 +446,6 @@ function Complaints() {
                               <Typography sx={{ color: '#d32f2f', fontWeight: 600 }}>Declined</Typography>
                             ) : null}
                           </TableCell>
-
-
                         </TableRow>
                       ))}
                     </TableBody>
@@ -506,10 +524,37 @@ function Complaints() {
             {/* Right Side - Assign Task To */}
             <Box sx={{ width: 320 }}>
               <Box sx={{ bgcolor: '#f5f5f5', p: 2, borderBottom: '1px solid #e0e0e0' }}>
-                <Typography sx={{ fontWeight: 600, fontSize: 14 }}>Assign task to</Typography>
+                <Typography sx={{ fontWeight: 600, fontSize: 14 }}>
+                  {selectedComplaint?.status === 'assigned' ? 'Assigned to' : 'Assign task to'}
+                </Typography>
               </Box>
               
-              {loadingArtisans ? (
+              {selectedComplaint?.status === 'assigned' ? (
+                // Show assigned artisan (non-clickable)
+                <Box sx={{ p: 3 }}>
+                  <Box
+                    sx={{
+                      bgcolor: '#e8f5e9',
+                      border: '1px solid #66bb6a',
+                      borderRadius: 1,
+                      p: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 1
+                    }}
+                  >
+                    <CheckCircleIcon sx={{ color: '#2e7d32' }} />
+                    <Typography sx={{ fontWeight: 500, color: '#2e7d32' }}>
+                      {selectedComplaint.assigned_artisan_name || 
+                       selectedComplaint.artisan_name || 
+                       'Assigned Artisan'}
+                    </Typography>
+                  </Box>
+                  <Typography sx={{ mt: 2, fontSize: 12, color: '#666', textAlign: 'center' }}>
+                    This complaint has already been assigned
+                  </Typography>
+                </Box>
+              ) : loadingArtisans ? (
                 <Box display="flex" justifyContent="center" alignItems="center" py={4}>
                   <CircularProgress size={30} sx={{ color: '#66bb6a' }} />
                 </Box>
@@ -538,7 +583,6 @@ function Complaints() {
                         </Typography>
                       </Box>
                     </ListItem>
-
                   ))}
                 </List>
               ) : (

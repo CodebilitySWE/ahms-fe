@@ -95,10 +95,15 @@ const RequestsTable = memo(({
                     color: "#fff",
                     textTransform: "none",
                     fontWeight: 500,
-                    "&:hover": { bgcolor: "rgba(255,255,255,0.1)" },
+                    bgcolor: selectedArtisan ? "rgba(255,255,255,0.2)" : "transparent",
+                    "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
+                    px: 2,
+                    py: 0.5,
+                    borderRadius: 1,
+                    border: selectedArtisan ? "1px solid rgba(255,255,255,0.5)" : "none",
                 }}
             >
-                Filter by Artisan
+                {selectedArtisan ? `Artisan: ${selectedArtisan}` : "Filter by Artisan"}
             </Button>
         </Typography>
         <Table>
