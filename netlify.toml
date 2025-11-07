@@ -1,6 +1,7 @@
 [build]
-  command = "yarn build"
+  command = "yarn run build"
   publish = "dist"
 
 [build.environment]
   NODE_ENV = "development"
+  YARN_FLAGS = "--production=false"
