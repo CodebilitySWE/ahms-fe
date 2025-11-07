@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import ClearIcon from "@mui/icons-material/Clear";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import { useTheme } from '@mui/material/styles';
 
 const fetchNotifications = async (token, role) => {
   if (!token) {
@@ -18,7 +19,6 @@ const fetchNotifications = async (token, role) => {
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   
-  // Determine the correct endpoint based on role
   const endpoint = role === 'admin' 
     ? `${API_BASE_URL}/api/admin/dashboard/notifications?limit=5`
     : `${API_BASE_URL}/api/student/dashboard/notifications?limit=5`;
@@ -47,7 +47,6 @@ const markNotificationAsRead = async (token, role, notificationId) => {
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
   
-  // Determine the correct endpoint based on role
   const endpoint = role === 'admin'
     ? `${API_BASE_URL}/api/admin/dashboard/notifications/${notificationId}/read`
     : `${API_BASE_URL}/api/student/dashboard/notifications/${notificationId}/read`;
@@ -70,6 +69,9 @@ const markNotificationAsRead = async (token, role, notificationId) => {
 };
 
 const Notification = ({ role = 'student' }) => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
+  
   const [notifications, setNotifications] = useState([]);
   const [expandedId, setExpandedId] = useState(null);
 
@@ -87,12 +89,10 @@ const Notification = ({ role = 'student' }) => {
     const isExpanding = expandedId !== notification.id;
     setExpandedId(isExpanding ? notification.id : null);
 
-    // Mark as read when expanding if not already read
     if (isExpanding && !notification.is_read) {
       const token = localStorage.getItem("authToken");
       try {
         await markNotificationAsRead(token, role, notification.id);
-        // Update the notification state to reflect it's been read
         setNotifications((prev) =>
           prev.map((notif) =>
             notif.id === notification.id ? { ...notif, is_read: true } : notif
@@ -138,16 +138,18 @@ const Notification = ({ role = 'student' }) => {
         border: 1,
         borderRadius: 4,
         padding: 2,
-        boxShadow: "0px 2px 3px rgba(0, 0, 0, 0.2)",
-        borderColor: "#F5F5F5",
-        backgroundColor: "white",
+        boxShadow: isDarkMode 
+          ? "0px 4px 12px rgba(0, 0, 0, 0.5)" 
+          : "0px 2px 3px rgba(0, 0, 0, 0.2)",
+        borderColor: isDarkMode ? "#333" : "#F5F5F5",
+        backgroundColor: isDarkMode ? "#1a1a1a" : "white",
       }}
     >
       <Typography
         variant="h6"
         sx={{
           fontWeight: "bold",
-          color: "#44577C",
+          color: isDarkMode ? "#ffffff" : "#44577C",
           marginBottom: 2,
           fontSize: 16,
         }}
@@ -156,7 +158,11 @@ const Notification = ({ role = 'student' }) => {
       </Typography>
 
       {notifications.length === 0 ? (
-        <Typography sx={{ textAlign: "center", color: "gray", fontSize: 14 }}>
+        <Typography sx={{ 
+          textAlign: "center", 
+          color: isDarkMode ? "#666" : "gray", 
+          fontSize: 14 
+        }}>
           No notifications to show
         </Typography>
       ) : (
@@ -166,15 +172,29 @@ const Notification = ({ role = 'student' }) => {
               expanded={expandedId === msg.id}
               onChange={() => handleAccordionToggle(msg)}
               disableGutters
+              sx={{
+                backgroundColor: isDarkMode 
+                  ? (msg.is_read ? '#1a1a1a' : '#252525')
+                  : (msg.is_read ? '#fff' : '#f8f9fa'),
+                '&:before': {
+                  display: 'none',
+                },
+              }}
             >
               <AccordionSummary
-                expandIcon={<KeyboardArrowDownIcon />}
+                expandIcon={
+                  <KeyboardArrowDownIcon 
+                    sx={{ color: isDarkMode ? '#ffffff' : 'inherit' }} 
+                  />
+                }
                 sx={{
                   display: "flex",
                   alignItems: "center",
                   paddingY: 1,
                   paddingX: 1,
-                  backgroundColor: msg.is_read ? "#fff" : "#f8f9fa",
+                  backgroundColor: isDarkMode 
+                    ? (msg.is_read ? '#1a1a1a' : '#252525')
+                    : (msg.is_read ? '#fff' : '#f8f9fa'),
                   "& .MuiAccordionSummary-content": {
                     alignItems: "center",
                   },
@@ -188,12 +208,15 @@ const Notification = ({ role = 'student' }) => {
                   }}
                   sx={{ marginRight: 1 }}
                 >
-                  <ClearIcon sx={{ fontSize: 14 }} />
+                  <ClearIcon sx={{ 
+                    fontSize: 14, 
+                    color: isDarkMode ? '#b0b0b0' : 'inherit' 
+                  }} />
                 </IconButton>
 
                 {msg.is_read && (
                   <CheckCircleOutlineIcon
-                    sx={{ color: "green", fontSize: 18, marginRight: 1 }}
+                    sx={{ color: "#4caf50", fontSize: 18, marginRight: 1 }}
                   />
                 )}
 
@@ -214,28 +237,46 @@ const Notification = ({ role = 'student' }) => {
                   <Typography
                     sx={{
                       fontSize: 14,
-                      color: msg.is_read ? "#666" : "#2c3e50",
+                      color: isDarkMode 
+                        ? (msg.is_read ? '#b0b0b0' : '#ffffff')
+                        : (msg.is_read ? '#666' : '#2c3e50'),
                       fontWeight: msg.is_read ? 400 : 500,
                       lineHeight: 1.4,
                     }}
                   >
                     {msg.message}
                   </Typography>
-                  <Typography sx={{ fontSize: 11, color: "#95a5a6", mt: 0.5 }}>
+                  <Typography sx={{ 
+                    fontSize: 11, 
+                    color: isDarkMode ? '#666' : '#95a5a6', 
+                    mt: 0.5 
+                  }}>
                     {formatTimeAgo(msg.created_at)}
                   </Typography>
                 </Box>
               </AccordionSummary>
 
-              <AccordionDetails sx={{ paddingX: 2, paddingY: 1, backgroundColor: "#fafafa" }}>
-                <Typography fontSize={13} sx={{ color: "#2c3e50", mb: 1 }}>
+              <AccordionDetails sx={{ 
+                paddingX: 2, 
+                paddingY: 1, 
+                backgroundColor: isDarkMode ? '#252525' : '#fafafa' 
+              }}>
+                <Typography fontSize={13} sx={{ 
+                  color: isDarkMode ? '#e0e0e0' : '#2c3e50', 
+                  mb: 1 
+                }}>
                   {msg.message}
                 </Typography>
-                <Typography fontSize={12} sx={{ color: "#95a5a6" }}>
+                <Typography fontSize={12} sx={{ 
+                  color: isDarkMode ? '#666' : '#95a5a6' 
+                }}>
                   Created: {new Date(msg.created_at).toLocaleString()}
                 </Typography>
                 {msg.complaint_title && (
-                  <Typography fontSize={12} sx={{ color: "#95a5a6", mt: 0.5 }}>
+                  <Typography fontSize={12} sx={{ 
+                    color: isDarkMode ? '#666' : '#95a5a6', 
+                    mt: 0.5 
+                  }}>
                     Complaint: {msg.complaint_title}
                   </Typography>
                 )}
@@ -246,7 +287,7 @@ const Notification = ({ role = 'student' }) => {
               sx={{
                 width: "100%",
                 height: "1px",
-                backgroundColor: "#D9D9D9",
+                backgroundColor: isDarkMode ? "#333" : "#D9D9D9",
                 marginY: 1,
               }}
             />

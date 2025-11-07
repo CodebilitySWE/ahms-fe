@@ -23,6 +23,8 @@ import {
   ListItem,
   ListItemText,
   Button,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
@@ -34,6 +36,10 @@ import Sidebar from '../../components/Reusable/Sidebar';
 
 function Complaints() {
   const { mode } = useThemeContext();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isDarkMode = mode === 'dark';
+  
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -118,10 +124,7 @@ function Complaints() {
       if (response.ok && data.success) {
         alert(`Complaint assigned to ${artisan.name || artisan.artisan_name || 'artisan'} successfully.`);
         
-        // Refresh complaints list
         await getComplaints();
-        
-        // Close modal
         handleCloseModal();
       } else {
         alert(data.message || 'Failed to assign complaint');
@@ -155,7 +158,6 @@ function Complaints() {
 
       if (response.ok && data.success) {
         alert('Complaint declined successfully.');
-        // Remove the complaint from view
         setComplaints(prevComplaints => 
           prevComplaints.filter(complaint => complaint.id !== complaintId)
         );
@@ -198,10 +200,8 @@ function Complaints() {
     setSelectedComplaint(complaint);
     setIsModalOpen(true);
     
-    // Fetch full complaint details to get assigned artisan info
     await getComplaintDetails(complaint.id);
     
-    // Only fetch available artisans if complaint is not already assigned
     if (complaint.status !== 'assigned') {
       getAvailableArtisans(complaint.id);
     }
@@ -273,7 +273,7 @@ function Complaints() {
   };
 
   return (
-    <Box display="flex" minHeight="100vh">
+    <Box display="flex" minHeight="100vh" sx={{ bgcolor: isDarkMode ? '#0a0a0a' : '#f5f5f5' }}>
       <Sidebar />
       <Box
         flex={1}
@@ -281,7 +281,9 @@ function Complaints() {
         flexDirection="column"
         sx={{
           minWidth: 0,
-          ml: { xs: 0, sm: '280px' },
+          marginLeft: isMobile ? 0 : '250px',
+          padding: isMobile ? '70px 16px 16px 16px' : '24px',
+          transition: 'margin 0.3s ease',
         }}
       >
         <NavBar 
@@ -297,13 +299,16 @@ function Complaints() {
             px: { xs: 2, sm: 3 },
             mt: 6,
             flexGrow: 1,
-            backgroundColor: mode === 'dark' ? '#1a1a1a' : '#f5f5f5',
+            backgroundColor: isDarkMode ? '#0a0a0a' : '#f5f5f5',
             overflow: 'auto',
           }}
         >
-          {/* Main Table Card */}
-          <Card sx={{ boxShadow: 3, borderRadius: 2, overflow: 'hidden' }}>
-            {/* Header - Green */}
+          <Card sx={{ 
+            boxShadow: 3, 
+            borderRadius: 2, 
+            overflow: 'hidden',
+            bgcolor: isDarkMode ? '#1a1a1a' : '#fff'
+          }}>
             <Box
               sx={{
                 px: 3,
@@ -364,7 +369,6 @@ function Complaints() {
               </Box>
             </Box>
 
-            {/* Table */}
             {loading ? (
               <Box display="flex" justifyContent="center" py={8}>
                 <CircularProgress sx={{ color: '#4caf50' }} />
@@ -374,16 +378,16 @@ function Complaints() {
                 <TableContainer>
                   <Table>
                     <TableHead>
-                      <TableRow sx={{ bgcolor: '#f5f5f5' }}>
-                        <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>LOGGED BY</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>TYPE</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>PRIORITY</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>ROOM NO.</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>DESCRIPTION</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>DATE</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>STATUS</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>ACTION</TableCell>
-                        <TableCell sx={{ fontWeight: 600, color: '#666', fontSize: 12 }}>CONDITION</TableCell>
+                      <TableRow sx={{ bgcolor: isDarkMode ? '#2a2a2a' : '#f5f5f5' }}>
+                        <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 12 }}>LOGGED BY</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 12 }}>TYPE</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 12 }}>PRIORITY</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 12 }}>ROOM NO.</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 12 }}>DESCRIPTION</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 12 }}>DATE</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 12 }}>STATUS</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 12 }}>ACTION</TableCell>
+                        <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 12 }}>CONDITION</TableCell>
                       </TableRow>
                     </TableHead>
                     <TableBody>
@@ -391,19 +395,21 @@ function Complaints() {
                         <TableRow 
                           key={index}
                           sx={{ 
-                            bgcolor: index % 2 === 0 ? '#fff' : '#fafafa',
-                            '&:hover': { bgcolor: '#f0f0f0' }
+                            bgcolor: isDarkMode 
+                              ? (index % 2 === 0 ? '#1a1a1a' : '#222') 
+                              : (index % 2 === 0 ? '#fff' : '#fafafa'),
+                            '&:hover': { bgcolor: isDarkMode ? '#2a2a2a' : '#f0f0f0' }
                           }}
                         >
-                          <TableCell sx={{ fontWeight: 600 }}>{item.complainant_name}</TableCell>
-                          <TableCell sx={{ color: '#888' }}>{item.category_name}</TableCell>
+                          <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#e0e0e0' : '#333' }}>{item.complainant_name}</TableCell>
+                          <TableCell sx={{ color: isDarkMode ? '#aaa' : '#888' }}>{item.category_name}</TableCell>
                           <TableCell sx={{ color: getPriorityColor(item.priority), fontWeight: 500 }}>
                             {item.priority}
                           </TableCell>
-                          <TableCell>{checkRoomNumber(item.room_number)}</TableCell>
-                          <TableCell sx={{ color: '#666' }}>{item.title}</TableCell>
-                          <TableCell sx={{ color: '#666' }}>{item.created_at}</TableCell>
-                          <TableCell sx={{ color: '#666' }}>{item.status}</TableCell>
+                          <TableCell sx={{ color: isDarkMode ? '#e0e0e0' : '#333' }}>{checkRoomNumber(item.room_number)}</TableCell>
+                          <TableCell sx={{ color: isDarkMode ? '#aaa' : '#666' }}>{item.title}</TableCell>
+                          <TableCell sx={{ color: isDarkMode ? '#aaa' : '#666' }}>{item.created_at}</TableCell>
+                          <TableCell sx={{ color: isDarkMode ? '#aaa' : '#666' }}>{item.status}</TableCell>
                           <TableCell>
                             <Typography
                               sx={{
@@ -420,7 +426,6 @@ function Complaints() {
                           <TableCell>
                             {item.status === 'submitted' ? (
                               <Box sx={{ display: 'flex', gap: 1 }}>
-                                {/* Accept Button */}
                                 <IconButton
                                   size="small"
                                   sx={{ color: '#2e7d32' }}
@@ -430,7 +435,6 @@ function Complaints() {
                                   <CheckCircleIcon />
                                 </IconButton>
 
-                                {/* Decline Button */}
                                 <IconButton
                                   size="small"
                                   sx={{ color: '#d32f2f' }}
@@ -452,16 +456,18 @@ function Complaints() {
                   </Table>
                 </TableContainer>
 
-                {/* Pagination */}
                 <Box display="flex" justifyContent="center" my={3}>
                   <Pagination
                     count={Math.ceil(filteredComplaints.length / rowsPerPage)}
                     page={page}
                     onChange={handlePageChange}
                     sx={{
-                      '& .MuiPaginationItem-root.Mui-selected': {
-                        bgcolor: '#66bb6a',
-                        color: '#fff',
+                      '& .MuiPaginationItem-root': {
+                        color: isDarkMode ? '#e0e0e0' : '#666',
+                        '&.Mui-selected': {
+                          bgcolor: '#66bb6a',
+                          color: '#fff',
+                        }
                       }
                     }}
                   />
@@ -472,69 +478,69 @@ function Complaints() {
         </Box>
       </Box>
 
-      {/* Modal with Complaint Details and Assign Task */}
-      <Dialog open={isModalOpen} onClose={handleCloseModal} fullWidth maxWidth="md">
+      <Dialog open={isModalOpen} onClose={handleCloseModal} fullWidth maxWidth="md"
+        PaperProps={{
+          sx: { bgcolor: isDarkMode ? '#1a1a1a' : '#fff' }
+        }}
+      >
         <DialogTitle sx={{ bgcolor: '#66bb6a', color: '#fff' }}>
           Complaint Details
         </DialogTitle>
-        <DialogContent dividers sx={{ p: 0 }}>
+        <DialogContent dividers sx={{ p: 0, bgcolor: isDarkMode ? '#1a1a1a' : '#fff' }}>
           <Box sx={{ display: 'flex', minHeight: 400 }}>
-            {/* Left Side - Complaint Details */}
-            <Box sx={{ flex: 1, p: 3, borderRight: '1px solid #e0e0e0' }}>
+            <Box sx={{ flex: 1, p: 3, borderRight: `1px solid ${isDarkMode ? '#333' : '#e0e0e0'}` }}>
               {selectedComplaint && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <Box>
-                    <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Logged By:</Typography>
-                    <Typography sx={{ fontSize: 16 }}>{selectedComplaint.complainant_name}</Typography>
+                    <Typography sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 14 }}>Logged By:</Typography>
+                    <Typography sx={{ fontSize: 16, color: isDarkMode ? '#e0e0e0' : '#333' }}>{selectedComplaint.complainant_name}</Typography>
                   </Box>
                   <Box>
-                    <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Type:</Typography>
-                    <Typography sx={{ fontSize: 16 }}>{selectedComplaint.category_name}</Typography>
+                    <Typography sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 14 }}>Type:</Typography>
+                    <Typography sx={{ fontSize: 16, color: isDarkMode ? '#e0e0e0' : '#333' }}>{selectedComplaint.category_name}</Typography>
                   </Box>
                   <Box>
-                    <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Priority:</Typography>
+                    <Typography sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 14 }}>Priority:</Typography>
                     <Typography sx={{ fontSize: 16, color: getPriorityColor(selectedComplaint.priority) }}>
                       {selectedComplaint.priority}
                     </Typography>
                   </Box>
                   <Box>
-                    <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Room No.:</Typography>
-                    <Typography sx={{ fontSize: 16 }}>{checkRoomNumber(selectedComplaint.room_number)}</Typography>
+                    <Typography sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 14 }}>Room No.:</Typography>
+                    <Typography sx={{ fontSize: 16, color: isDarkMode ? '#e0e0e0' : '#333' }}>{checkRoomNumber(selectedComplaint.room_number)}</Typography>
                   </Box>
                   <Box>
-                    <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Description:</Typography>
-                    <Typography sx={{ fontSize: 16 }}>{selectedComplaint.title}</Typography>
+                    <Typography sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 14 }}>Description:</Typography>
+                    <Typography sx={{ fontSize: 16, color: isDarkMode ? '#e0e0e0' : '#333' }}>{selectedComplaint.title}</Typography>
                   </Box>
                   <Box>
-                    <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Date:</Typography>
-                    <Typography sx={{ fontSize: 16 }}>{selectedComplaint.created_at}</Typography>
+                    <Typography sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 14 }}>Date:</Typography>
+                    <Typography sx={{ fontSize: 16, color: isDarkMode ? '#e0e0e0' : '#333' }}>{selectedComplaint.created_at}</Typography>
                   </Box>
                   <Box>
-                    <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Status:</Typography>
-                    <Typography sx={{ fontSize: 16 }}>{selectedComplaint.status}</Typography>
+                    <Typography sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 14 }}>Status:</Typography>
+                    <Typography sx={{ fontSize: 16, color: isDarkMode ? '#e0e0e0' : '#333' }}>{selectedComplaint.status}</Typography>
                   </Box>
                   <Box>
-                    <Typography sx={{ fontWeight: 600, color: '#666', fontSize: 14 }}>Condition:</Typography>
-                    <Typography sx={{ fontSize: 16 }}>{selectedComplaint.condition || 'Pending'}</Typography>
+                    <Typography sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', fontSize: 14 }}>Condition:</Typography>
+                    <Typography sx={{ fontSize: 16, color: isDarkMode ? '#e0e0e0' : '#333' }}>{selectedComplaint.condition || 'Pending'}</Typography>
                   </Box>
                 </Box>
               )}
             </Box>
 
-            {/* Right Side - Assign Task To */}
-            <Box sx={{ width: 320 }}>
-              <Box sx={{ bgcolor: '#f5f5f5', p: 2, borderBottom: '1px solid #e0e0e0' }}>
-                <Typography sx={{ fontWeight: 600, fontSize: 14 }}>
-                  {selectedComplaint?.status === 'assigned' ? 'Assigned to' : 'Assign task to'}
+            <Box sx={{ width: 320, bgcolor: isDarkMode ? '#222' : '#fff' }}>
+              <Box sx={{ bgcolor: isDarkMode ? '#2a2a2a' : '#f5f5f5', p: 2, borderBottom: `1px solid ${isDarkMode ? '#333' : '#e0e0e0'}` }}>
+                <Typography sx={{ fontWeight: 600, fontSize: 14, color: isDarkMode ? '#e0e0e0' : '#333' }}>
+                  {selectedComplaint?.status !== 'assigned' ? 'Assigned to' : 'Assign task to'}
                 </Typography>
               </Box>
               
               {selectedComplaint?.status === 'assigned' ? (
-                // Show assigned artisan (non-clickable)
                 <Box sx={{ p: 3 }}>
                   <Box
                     sx={{
-                      bgcolor: '#e8f5e9',
+                      bgcolor: isDarkMode ? '#1a3a1a' : '#e8f5e9',
                       border: '1px solid #66bb6a',
                       borderRadius: 1,
                       p: 2,
@@ -546,11 +552,11 @@ function Complaints() {
                     <CheckCircleIcon sx={{ color: '#2e7d32' }} />
                     <Typography sx={{ fontWeight: 500, color: '#2e7d32' }}>
                       {selectedComplaint.assigned_artisan_name || 
-                       selectedComplaint.artisan_name || 
-                       'Assigned Artisan'}
+                        selectedComplaint.artisan_name || 
+                        'Assigned Artisan'}
                     </Typography>
                   </Box>
-                  <Typography sx={{ mt: 2, fontSize: 12, color: '#666', textAlign: 'center' }}>
+                  <Typography sx={{ mt: 2, fontSize: 12, color: isDarkMode ? '#aaa' : '#666', textAlign: 'center' }}>
                     This complaint has already been assigned
                   </Typography>
                 </Box>
@@ -565,12 +571,12 @@ function Complaints() {
                       key={index}
                       disabled={loading}
                       sx={{
-                        borderBottom: index < availableArtisans.length - 1 ? '1px solid #f0f0f0' : 'none',
+                        borderBottom: index < availableArtisans.length - 1 ? `1px solid ${isDarkMode ? '#333' : '#f0f0f0'}` : 'none',
                         py: 1.5,
                         px: 2,
                         opacity: loading ? 0.5 : 1,
                         cursor: loading ? 'not-allowed' : 'pointer',
-                        '&:hover': !loading ? { bgcolor: '#f9f9f9' } : {},
+                        '&:hover': !loading ? { bgcolor: isDarkMode ? '#2a2a2a' : '#f9f9f9' } : {},
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center'
@@ -578,7 +584,7 @@ function Complaints() {
                       onClick={() => !loading && handleAssignArtisan(artisan)}
                     >
                       <Box>
-                        <Typography sx={{ fontWeight: 500 }}>
+                        <Typography sx={{ fontWeight: 500, color: isDarkMode ? '#e0e0e0' : '#333' }}>
                           {artisan.name || artisan.artisan_name || 'Unknown'}
                         </Typography>
                       </Box>
@@ -587,13 +593,13 @@ function Complaints() {
                 </List>
               ) : (
                 <Box sx={{ p: 3, textAlign: 'center' }}>
-                  <Typography sx={{ color: '#999' }}>No available artisans found</Typography>
+                  <Typography sx={{ color: isDarkMode ? '#666' : '#999' }}>No available artisans found</Typography>
                 </Box>
               )}
             </Box>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ p: 2 }}>
+        <DialogActions sx={{ p: 2, bgcolor: isDarkMode ? '#1a1a1a' : '#fff' }}>
           <Button
             onClick={handleCloseModal}
             variant="contained"

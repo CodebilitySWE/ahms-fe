@@ -87,6 +87,8 @@ const LoaderComponent = ({
   const theme = useTheme();
   const [progress, setProgress] = useState(0);
   const [visible, setVisible] = useState(false);
+  
+  const isDarkMode = theme.palette.mode === 'dark';
 
   useEffect(() => {
     if (isLoading) {
@@ -176,7 +178,7 @@ const LoaderComponent = ({
               position: 'absolute',
               inset: '3px',
               borderRadius: '50%',
-              background: 'rgba(255, 255, 255, 0.98)', 
+              background: isDarkMode ? 'rgba(26, 26, 26, 0.98)' : 'rgba(255, 255, 255, 0.98)', 
             }
           }}
         />
@@ -231,12 +233,18 @@ const LoaderComponent = ({
             width: imageSize + 20,
             height: imageSize + 20,
             borderRadius: '50%',
-            background: '#ffffff',
-            boxShadow: `
-              0 0 0 8px rgba(255, 255, 255, 0.9),
-              0 0 0 12px rgba(45, 169, 75, 0.1),
-              0 10px 30px rgba(0, 0, 0, 0.1)
-            `,
+            background: isDarkMode ? '#1a1a1a' : '#ffffff',
+            boxShadow: isDarkMode 
+              ? `
+                0 0 0 8px rgba(26, 26, 26, 0.9),
+                0 0 0 12px rgba(45, 169, 75, 0.1),
+                0 10px 30px rgba(0, 0, 0, 0.3)
+              `
+              : `
+                0 0 0 8px rgba(255, 255, 255, 0.9),
+                0 0 0 12px rgba(45, 169, 75, 0.1),
+                0 10px 30px rgba(0, 0, 0, 0.1)
+              `,
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
@@ -326,7 +334,7 @@ const LoaderComponent = ({
         <Typography
           variant="body2"
           sx={{
-            color: 'rgba(0, 0, 0, 0.6)',
+            color: isDarkMode ? 'rgba(255, 255, 255, 0.7)' : 'rgba(0, 0, 0, 0.6)',
             marginTop: 1,
             fontWeight: 400,
             fontSize: '0.9rem',

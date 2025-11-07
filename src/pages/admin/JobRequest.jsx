@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, memo, lazy, Suspense } from "react";
+import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
 import {
     Box,
     Typography,
@@ -11,10 +11,13 @@ import {
     Button,
     Pagination,
     Chip,
+    useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import { FilterList, MoreVert } from "@mui/icons-material";
 import axios from "axios";
 
+import { useThemeContext } from '../../contexts/ThemeContext';
 import Sidebar from "../../components/Reusable/Sidebar";
 import Navbar from "../../components/Reusable/NavBar";
 import FilterModal from "../../utils/FilterModal";
@@ -28,282 +31,12 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const REQUEST_LIMIT = 5;
 const COMPLETED_LIMIT = 5;
 
-const TableRowMemo = memo(({ request, onActionClick, getStatusColor }) => (
-    <TableRow sx={{ "&:hover": { bgcolor: "#f9f9f9" } }}>
-        <TableCell>
-            <Box sx={{ fontWeight: 600, color: "#333" }}>{request.title}</Box>
-            <Typography variant="body2" color="textSecondary" sx={{ fontSize: "0.875rem" }}>
-                {request.description?.substring(0, 50)}...
-            </Typography>
-        </TableCell>
-        <TableCell>
-            <Button
-                onClick={(e) => onActionClick(e, request)}
-                sx={{ minWidth: "auto", color: "#2DA94B", p: 0.5 }}
-            >
-                <MoreVert />
-            </Button>
-        </TableCell>
-        <TableCell>
-            <Chip
-                label={request.status?.toUpperCase() || "PENDING"}
-                sx={{
-                    backgroundColor: getStatusColor(request.status),
-                    color: "#fff",
-                    fontWeight: 600,
-                    fontSize: "0.75rem",
-                }}
-            />
-        </TableCell>
-    </TableRow>
-));
-
-TableRowMemo.displayName = "TableRowMemo";
-
-const RequestsTable = memo(({
-    requests,
-    requestPage,
-    requestTotalPages,
-    requestPagination,
-    selectedArtisan,
-    loading,
-    onFilterClick,
-    onActionClick,
-    onPageChange,
-    getStatusColor,
-}) => (
-    <Box p={2} borderRadius={2} bgcolor="#fff" boxShadow={1} mb={4}>
-        <Typography
-            variant="h6"
-            sx={{
-                mb: 2,
-                bgcolor: "#2DA94B",
-                color: "#fff",
-                p: 1.5,
-                borderRadius: 1,
-                fontWeight: 600,
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-            }}
-        >
-            Requests
-            <Button
-                startIcon={<FilterList />}
-                onClick={onFilterClick}
-                sx={{
-                    color: "#fff",
-                    textTransform: "none",
-                    fontWeight: 500,
-                    bgcolor: selectedArtisan ? "rgba(255,255,255,0.2)" : "transparent",
-                    "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
-                    px: 2,
-                    py: 0.5,
-                    borderRadius: 1,
-                    border: selectedArtisan ? "1px solid rgba(255,255,255,0.5)" : "none",
-                }}
-            >
-                {selectedArtisan ? `Artisan: ${selectedArtisan}` : "Filter by Artisan"}
-            </Button>
-        </Typography>
-        <Table>
-            <TableHead>
-                <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                    <TableCell sx={{ fontWeight: 600, color: "#666", textTransform: "uppercase", fontSize: "0.75rem" }}>
-                        DESCRIPTION
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: "#666", textTransform: "uppercase", fontSize: "0.75rem" }}>
-                        ACTION STATUS
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: "#666", textTransform: "uppercase", fontSize: "0.75rem" }}>
-                        STATUS
-                    </TableCell>
-                </TableRow>
-            </TableHead>
-            <TableBody>
-                {loading ? (
-                    <TableRow>
-                        <TableCell colSpan={3} align="center" sx={{ py: 4 }}>
-                            <CircularProgress sx={{ color: "#2DA94B" }} size={30} />
-                        </TableCell>
-                    </TableRow>
-                ) : requests.length > 0 ? (
-                    requests.map((request) => (
-                        <TableRowMemo
-                            key={request.id}
-                            request={request}
-                            onActionClick={onActionClick}
-                            getStatusColor={getStatusColor}
-                        />
-                    ))
-                ) : (
-                    <TableRow>
-                        <TableCell colSpan={3} align="center" sx={{ py: 4, color: "#999" }}>
-                            {selectedArtisan ? "No requests found..." : "Please select an artisan to view requests"}
-                        </TableCell>
-                    </TableRow>
-                )}
-            </TableBody>
-        </Table>
-        {requestTotalPages > 1 && (
-            <Box mt={2} display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="body2" color="textSecondary">
-                    Showing {requests.length > 0 ? (requestPage - 1) * REQUEST_LIMIT + 1 : 0} -{" "}
-                    {Math.min(requestPage * REQUEST_LIMIT, requestPagination.total)} of {requestPagination.total} requests
-                </Typography>
-                <Pagination
-                    count={requestTotalPages}
-                    page={requestPage}
-                    onChange={onPageChange}
-                    shape="rounded"
-                    sx={{
-                        "& .MuiPaginationItem-root": {
-                            borderRadius: "8px",
-                            backgroundColor: "white",
-                            border: "1px solid #e0e0e0",
-                            color: "#666",
-                            fontWeight: 500,
-                            "&.Mui-selected": {
-                                backgroundColor: "#2DA94B",
-                                color: "#fff",
-                                border: "1px solid #2DA94B",
-                            },
-                            "&:hover": { backgroundColor: "#f0f0f0" },
-                        },
-                    }}
-                />
-            </Box>
-        )}
-    </Box>
-));
-
-RequestsTable.displayName = "RequestsTable";
-
-const CompletedTable = memo(({
-    completed,
-    completedPage,
-    completedTotalPages,
-    completedPagination,
-    selectedArtisan,
-    loading,
-    onPageChange,
-    onViewRating,
-}) => (
-    <Box p={2} borderRadius={2} bgcolor="#fff" boxShadow={1}>
-        <Typography
-            variant="h6"
-            sx={{
-                mb: 2,
-                bgcolor: "#2DA94B",
-                color: "#fff",
-                p: 1.5,
-                borderRadius: 1,
-                fontWeight: 600,
-            }}
-        >
-            Completed
-        </Typography>
-        <Table>
-            <TableHead>
-                <TableRow sx={{ bgcolor: "#f5f5f5" }}>
-                    <TableCell sx={{ fontWeight: 600, color: "#666", textTransform: "uppercase", fontSize: "0.75rem" }}>
-                        DESCRIPTION
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: "#666", textTransform: "uppercase", fontSize: "0.75rem" }}>
-                        RATING
-                    </TableCell>
-                    <TableCell sx={{ fontWeight: 600, color: "#666", textTransform: "uppercase", fontSize: "0.75rem" }}>
-                        STATUS
-                    </TableCell>
-                </TableRow>
-            </TableHead>
-            <TableBody>
-                {loading ? (
-                    <TableRow>
-                        <TableCell colSpan={3} align="center" sx={{ py: 4 }}>
-                            <CircularProgress sx={{ color: "#2DA94B" }} size={30} />
-                        </TableCell>
-                    </TableRow>
-                ) : completed.length > 0 ? (
-                    completed.map((item) => (
-                        <TableRow key={item.id} sx={{ "&:hover": { bgcolor: "#f9f9f9" } }}>
-                            <TableCell>
-                                <Box sx={{ fontWeight: 600, color: "#333" }}>{item.title}</Box>
-                                <Typography variant="body2" color="textSecondary" sx={{ fontSize: "0.875rem" }}>
-                                    {item.description?.substring(0, 50)}...
-                                </Typography>
-                            </TableCell>
-                            <TableCell>
-                                <Button 
-                                    onClick={() => onViewRating(item)}
-                                    sx={{ 
-                                        minWidth: "auto", 
-                                        color: item.rating ? "#fbbf24" : "#999", 
-                                        p: 0.5,
-                                        textTransform: "none",
-                                        fontWeight: 600
-                                    }}
-                                >
-                                    {item.rating ? `⭐ ${item.rating}` : "No Rating"}
-                                </Button>
-                            </TableCell>
-                            <TableCell>
-                                <Chip
-                                    label="COMPLETED"
-                                    sx={{
-                                        backgroundColor: "#4caf50",
-                                        color: "#fff",
-                                        fontWeight: 600,
-                                        fontSize: "0.75rem",
-                                    }}
-                                />
-                            </TableCell>
-                        </TableRow>
-                    ))
-                ) : (
-                    <TableRow>
-                        <TableCell colSpan={3} align="center" sx={{ py: 4, color: "#999" }}>
-                            {selectedArtisan ? "No completed requests found..." : "Please select an artisan to view completed requests"}
-                        </TableCell>
-                    </TableRow>
-                )}
-            </TableBody>
-        </Table>
-        {completedTotalPages > 1 && (
-            <Box mt={2} display="flex" justifyContent="space-between" alignItems="center">
-                <Typography variant="body2" color="textSecondary">
-                    Showing {completed.length > 0 ? (completedPage - 1) * COMPLETED_LIMIT + 1 : 0} -{" "}
-                    {Math.min(completedPage * COMPLETED_LIMIT, completedPagination.total)} of {completedPagination.total} completed
-                </Typography>
-                <Pagination
-                    count={completedTotalPages}
-                    page={completedPage}
-                    onChange={onPageChange}
-                    shape="rounded"
-                    sx={{
-                        "& .MuiPaginationItem-root": {
-                            borderRadius: "8px",
-                            backgroundColor: "white",
-                            border: "1px solid #e0e0e0",
-                            color: "#666",
-                            fontWeight: 500,
-                            "&.Mui-selected": {
-                                backgroundColor: "#2DA94B",
-                                color: "#fff",
-                                border: "1px solid #2DA94B",
-                            },
-                            "&:hover": { backgroundColor: "#f0f0f0" },
-                        },
-                    }}
-                />
-            </Box>
-        )}
-    </Box>
-));
-
-CompletedTable.displayName = "CompletedTable";
-
 const JobRequest = () => {
+    const { mode } = useThemeContext();
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+    const isDarkMode = mode === 'dark';
+
     const [requests, setRequests] = useState([]);
     const [completed, setCompleted] = useState([]);
     const [artisans, setArtisans] = useState([]);
@@ -579,7 +312,7 @@ const JobRequest = () => {
     const completedTotalPages = useMemo(() => Math.ceil(completedPagination.total / COMPLETED_LIMIT), [completedPagination.total]);
 
     return (
-        <Box display="flex" minHeight="100vh">
+        <Box display="flex" minHeight="100vh" sx={{ bgcolor: isDarkMode ? '#0a0a0a' : '#f5f5f5' }}>
             <Sidebar />
             <Box
                 flex={1}
@@ -587,33 +320,256 @@ const JobRequest = () => {
                 flexDirection="column"
                 sx={{
                     minWidth: 0,
-                    ml: { xs: 0, sm: "280px" },
+                    marginLeft: isMobile ? 0 : '250px',
+                    padding: isMobile ? '70px 16px 16px 16px' : '24px',
+                    transition: 'margin 0.3s ease',
                 }}
             >
                 <Navbar notificationCount={5} pageName="Job Requests" userType="/Admin" userRole="admin" />
-                <Box flexGrow={1} ml={{ md: "0px" }} p={3} bgcolor="#f8f4f4ff" minHeight="100vh">
-                    <RequestsTable
-                        requests={requests}
-                        requestPage={requestPage}
-                        requestTotalPages={requestTotalPages}
-                        requestPagination={requestPagination}
-                        selectedArtisan={selectedArtisan}
-                        loading={loading}
-                        onFilterClick={handleOpenFilterModal}
-                        onActionClick={handleOpenActionMenu}
-                        onPageChange={handleRequestPageChange}
-                        getStatusColor={getStatusColor}
-                    />
-                    <CompletedTable
-                        completed={completed}
-                        completedPage={completedPage}
-                        completedTotalPages={completedTotalPages}
-                        completedPagination={completedPagination}
-                        selectedArtisan={selectedArtisan}
-                        loading={loading}
-                        onPageChange={handleCompletedPageChange}
-                        onViewRating={handleViewRating}
-                    />
+                <Box flexGrow={1} p={3} bgcolor={isDarkMode ? '#0a0a0a' : '#f8f4f4ff'} minHeight="100vh">
+                    {/* Requests Table */}
+                    <Box p={2} borderRadius={2} bgcolor={isDarkMode ? '#1a1a1a' : '#fff'} boxShadow={1} mb={4}>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                mb: 2,
+                                bgcolor: "#2DA94B",
+                                color: "#fff",
+                                p: 1.5,
+                                borderRadius: 1,
+                                fontWeight: 600,
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                            }}
+                        >
+                            Requests
+                            <Button
+                                startIcon={<FilterList />}
+                                onClick={handleOpenFilterModal}
+                                sx={{
+                                    color: "#fff",
+                                    textTransform: "none",
+                                    fontWeight: 500,
+                                    bgcolor: selectedArtisan ? "rgba(255,255,255,0.2)" : "transparent",
+                                    "&:hover": { bgcolor: "rgba(255,255,255,0.3)" },
+                                    px: 2,
+                                    py: 0.5,
+                                    borderRadius: 1,
+                                    border: selectedArtisan ? "1px solid rgba(255,255,255,0.5)" : "none",
+                                }}
+                            >
+                                {selectedArtisan ? `Artisan: ${selectedArtisan}` : "Filter by Artisan"}
+                            </Button>
+                        </Typography>
+                        <Table>
+                            <TableHead>
+                                <TableRow sx={{ bgcolor: isDarkMode ? '#2a2a2a' : '#f5f5f5' }}>
+                                    <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', textTransform: "uppercase", fontSize: "0.75rem" }}>
+                                        DESCRIPTION
+                                    </TableCell>
+                                    <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', textTransform: "uppercase", fontSize: "0.75rem" }}>
+                                        ACTION STATUS
+                                    </TableCell>
+                                    <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', textTransform: "uppercase", fontSize: "0.75rem" }}>
+                                        STATUS
+                                    </TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {loading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={3} align="center" sx={{ py: 4 }}>
+                                            <CircularProgress sx={{ color: "#2DA94B" }} size={30} />
+                                        </TableCell>
+                                    </TableRow>
+                                ) : requests.length > 0 ? (
+                                    requests.map((request) => (
+                                        <TableRow key={request.id} sx={{ 
+                                            "&:hover": { bgcolor: isDarkMode ? '#2a2a2a' : '#f9f9f9' },
+                                            bgcolor: isDarkMode ? '#1a1a1a' : '#fff'
+                                        }}>
+                                            <TableCell>
+                                                <Box sx={{ fontWeight: 600, color: isDarkMode ? '#e0e0e0' : '#333' }}>{request.title}</Box>
+                                                <Typography variant="body2" color="textSecondary" sx={{ fontSize: "0.875rem", color: isDarkMode ? '#aaa' : '#666' }}>
+                                                    {request.description?.substring(0, 50)}...
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button
+                                                    onClick={(e) => handleOpenActionMenu(e, request)}
+                                                    sx={{ minWidth: "auto", color: "#2DA94B", p: 0.5 }}
+                                                >
+                                                    <MoreVert />
+                                                </Button>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label={request.status?.toUpperCase() || "PENDING"}
+                                                    sx={{
+                                                        backgroundColor: getStatusColor(request.status),
+                                                        color: "#fff",
+                                                        fontWeight: 600,
+                                                        fontSize: "0.75rem",
+                                                    }}
+                                                />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={3} align="center" sx={{ py: 4, color: isDarkMode ? '#666' : '#999' }}>
+                                            {selectedArtisan ? "No requests found..." : "Please select an artisan to view requests"}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                        {requestTotalPages > 1 && (
+                            <Box mt={2} display="flex" justifyContent="space-between" alignItems="center">
+                                <Typography variant="body2" color="textSecondary" sx={{ color: isDarkMode ? '#aaa' : '#666' }}>
+                                    Showing {requests.length > 0 ? (requestPage - 1) * REQUEST_LIMIT + 1 : 0} -{" "}
+                                    {Math.min(requestPage * REQUEST_LIMIT, requestPagination.total)} of {requestPagination.total} requests
+                                </Typography>
+                                <Pagination
+                                    count={requestTotalPages}
+                                    page={requestPage}
+                                    onChange={handleRequestPageChange}
+                                    shape="rounded"
+                                    sx={{
+                                        "& .MuiPaginationItem-root": {
+                                            borderRadius: "8px",
+                                            backgroundColor: isDarkMode ? '#2a2a2a' : 'white',
+                                            border: `1px solid ${isDarkMode ? '#333' : '#e0e0e0'}`,
+                                            color: isDarkMode ? '#e0e0e0' : '#666',
+                                            fontWeight: 500,
+                                            "&.Mui-selected": {
+                                                backgroundColor: "#2DA94B",
+                                                color: "#fff",
+                                                border: "1px solid #2DA94B",
+                                            },
+                                            "&:hover": { backgroundColor: isDarkMode ? '#333' : '#f0f0f0' },
+                                        },
+                                    }}
+                                />
+                            </Box>
+                        )}
+                    </Box>
+
+                    {/* Completed Table */}
+                    <Box p={2} borderRadius={2} bgcolor={isDarkMode ? '#1a1a1a' : '#fff'} boxShadow={1}>
+                        <Typography
+                            variant="h6"
+                            sx={{
+                                mb: 2,
+                                bgcolor: "#2DA94B",
+                                color: "#fff",
+                                p: 1.5,
+                                borderRadius: 1,
+                                fontWeight: 600,
+                            }}
+                        >
+                            Completed
+                        </Typography>
+                        <Table>
+                            <TableHead>
+                                <TableRow sx={{ bgcolor: isDarkMode ? '#2a2a2a' : '#f5f5f5' }}>
+                                    <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', textTransform: "uppercase", fontSize: "0.75rem" }}>
+                                        DESCRIPTION
+                                    </TableCell>
+                                    <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', textTransform: "uppercase", fontSize: "0.75rem" }}>
+                                        RATING
+                                    </TableCell>
+                                    <TableCell sx={{ fontWeight: 600, color: isDarkMode ? '#aaa' : '#666', textTransform: "uppercase", fontSize: "0.75rem" }}>
+                                        STATUS
+                                    </TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {loading ? (
+                                    <TableRow>
+                                        <TableCell colSpan={3} align="center" sx={{ py: 4 }}>
+                                            <CircularProgress sx={{ color: "#2DA94B" }} size={30} />
+                                        </TableCell>
+                                    </TableRow>
+                                ) : completed.length > 0 ? (
+                                    completed.map((item) => (
+                                        <TableRow key={item.id} sx={{ 
+                                            "&:hover": { bgcolor: isDarkMode ? '#2a2a2a' : '#f9f9f9' },
+                                            bgcolor: isDarkMode ? '#1a1a1a' : '#fff'
+                                        }}>
+                                            <TableCell>
+                                                <Box sx={{ fontWeight: 600, color: isDarkMode ? '#e0e0e0' : '#333' }}>{item.title}</Box>
+                                                <Typography variant="body2" color="textSecondary" sx={{ fontSize: "0.875rem", color: isDarkMode ? '#aaa' : '#666' }}>
+                                                    {item.description?.substring(0, 50)}...
+                                                </Typography>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Button 
+                                                    onClick={() => handleViewRating(item)}
+                                                    sx={{ 
+                                                        minWidth: "auto", 
+                                                        color: item.rating ? "#fbbf24" : (isDarkMode ? '#666' : '#999'), 
+                                                        p: 0.5,
+                                                        textTransform: "none",
+                                                        fontWeight: 600
+                                                    }}
+                                                >
+                                                    {item.rating ? `⭐ ${item.rating}` : "No Rating"}
+                                                </Button>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Chip
+                                                    label="COMPLETED"
+                                                    sx={{
+                                                        backgroundColor: "#4caf50",
+                                                        color: "#fff",
+                                                        fontWeight: 600,
+                                                        fontSize: "0.75rem",
+                                                    }}
+                                                />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                ) : (
+                                    <TableRow>
+                                        <TableCell colSpan={3} align="center" sx={{ py: 4, color: isDarkMode ? '#666' : '#999' }}>
+                                            {selectedArtisan ? "No completed requests found..." : "Please select an artisan to view completed requests"}
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                            </TableBody>
+                        </Table>
+                        {completedTotalPages > 1 && (
+                            <Box mt={2} display="flex" justifyContent="space-between" alignItems="center">
+                                <Typography variant="body2" color="textSecondary" sx={{ color: isDarkMode ? '#aaa' : '#666' }}>
+                                    Showing {completed.length > 0 ? (completedPage - 1) * COMPLETED_LIMIT + 1 : 0} -{" "}
+                                    {Math.min(completedPage * COMPLETED_LIMIT, completedPagination.total)} of {completedPagination.total} completed
+                                </Typography>
+                                <Pagination
+                                    count={completedTotalPages}
+                                    page={completedPage}
+                                    onChange={handleCompletedPageChange}
+                                    shape="rounded"
+                                    sx={{
+                                        "& .MuiPaginationItem-root": {
+                                            borderRadius: "8px",
+                                            backgroundColor: isDarkMode ? '#2a2a2a' : 'white',
+                                            border: `1px solid ${isDarkMode ? '#333' : '#e0e0e0'}`,
+                                            color: isDarkMode ? '#e0e0e0' : '#666',
+                                            fontWeight: 500,
+                                            "&.Mui-selected": {
+                                                backgroundColor: "#2DA94B",
+                                                color: "#fff",
+                                                border: "1px solid #2DA94B",
+                                            },
+                                            "&:hover": { backgroundColor: isDarkMode ? '#333' : '#f0f0f0' },
+                                        },
+                                    }}
+                                />
+                            </Box>
+                        )}
+                    </Box>
                 </Box>
             </Box>
 

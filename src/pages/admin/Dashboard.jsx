@@ -10,13 +10,17 @@ import PeopleIcon from '@mui/icons-material/People';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/Pending';
+import { useTheme } from '@mui/material/styles';
 
 const Dashboard = () => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
+  
   const [stats, setStats] = useState({
-    totalUsers: 0,
-    complaints: 0,
-    resolved: 0,
-    pending: 0
+    totalUsers: { total: 0, changePercent: 0, period: 'month' },
+    complaints: { total: 0, changePercent: 0, period: 'week' },
+    resolved: { total: 0, changePercent: 0, period: 'day' },
+    pending: { total: 0, changePercent: 0, updatedAt: '' }
   });
 
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -40,21 +44,23 @@ const Dashboard = () => {
 
         if (response.ok) {
           const data = await response.json();
+          console.log('Dashboard stats:', data);
+          
           setStats({
-            totalUsers: data.data?.users,
-            complaints: data.data?.complaints,
-            resolved: data.data?.resolved,
-            pending: data.data?.pending
+            totalUsers: data.data?.users || { total: 0, changePercent: 0, period: 'month' },
+            complaints: data.data?.complaints || { total: 0, changePercent: 0, period: 'week' },
+            resolved: data.data?.resolved || { total: 0, changePercent: 0, period: 'day' },
+            pending: data.data?.pending || { total: 0, changePercent: 0, updatedAt: '' }
           });
         }
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
         // Set default values on error
         setStats({
-          totalUsers: 99,
-          complaints: 13,
-          resolved: 4,
-          pending: 9
+          totalUsers: { total: 0, changePercent: 0, period: 'month' },
+          complaints: { total: 0, changePercent: 0, period: 'week' },
+          resolved: { total: 0, changePercent: 0, period: 'day' },
+          pending: { total: 0, changePercent: 0, updatedAt: '' }
         });
       }
     };
@@ -63,8 +69,13 @@ const Dashboard = () => {
   }, [API_BASE_URL]);
 
   return (
-    <Box display="flex" minHeight="100vh">
-
+    <Box 
+      display="flex" 
+      minHeight="100vh"
+      sx={{
+        bgcolor: isDarkMode ? '#0a0a0a' : '#f5f5f5'
+      }}
+    >
       <Sidebar />
       <Box
         flex={1}
@@ -82,7 +93,14 @@ const Dashboard = () => {
           userRole="admin"
         />
         
-        <Box component="main" sx={{ p: 3, flexGrow: 1 }}>
+        <Box 
+          component="main" 
+          sx={{ 
+            p: 3, 
+            flexGrow: 1,
+            bgcolor: isDarkMode ? '#0a0a0a' : '#f5f5f5'
+          }}
+        >
           {/* Dashboard Cards Section */}
           <Box 
             display="flex" 
@@ -100,7 +118,11 @@ const Dashboard = () => {
               value={stats.totalUsers.total}
               iconBackground="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
               iconColor="#ffffff"
-              trend={{ direction: 'up', value: stats.totalUsers.changePercent, period: 'than last month' }}
+              trend={{ 
+                direction: 'up', 
+                value: stats.totalUsers.changePercent, 
+                period: `than last ${stats.totalUsers.period}` 
+              }}
               animateValue={true}
             />
             
@@ -110,7 +132,11 @@ const Dashboard = () => {
               value={stats.complaints.total}
               iconBackground="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"
               iconColor="#ffffff"
-              trend={{ direction: 'up', value: stats.complaints.changePercent, period: 'than last week' }}
+              trend={{ 
+                direction: 'up', 
+                value: stats.complaints.changePercent, 
+                period: `than last ${stats.complaints.period}` 
+              }}
               animateValue={true}
             />
             
@@ -120,7 +146,11 @@ const Dashboard = () => {
               value={stats.resolved.total}
               iconBackground="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
               iconColor="#ffffff"
-              trend={{ direction: 'up', value: stats.resolved.changePercent, period: 'than last day' }}
+              trend={{ 
+                direction: 'up', 
+                value: stats.resolved.changePercent, 
+                period: `than last ${stats.resolved.period}` 
+              }}
               animateValue={true}
             />
             
@@ -130,7 +160,11 @@ const Dashboard = () => {
               value={stats.pending.total}
               iconBackground="linear-gradient(135deg, #fa709a 0%, #fee140 100%)"
               iconColor="#ffffff"
-              trend={{ direction: 'up', value: stats.pending.changePercent, period: 'than last week' }}
+              trend={{ 
+                direction: 'up', 
+                value: stats.pending.changePercent || 0, 
+                period: 'complaints pending' 
+              }}
               animateValue={true}
             />
           </Box>

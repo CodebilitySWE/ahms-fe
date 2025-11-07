@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import {
   Drawer,
@@ -9,6 +9,9 @@ import {
   Box,
   Typography,
   Button,
+  IconButton,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import GroupIcon from "@mui/icons-material/Group";
@@ -17,6 +20,8 @@ import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import NotificationsOutlinedIcon from "@mui/icons-material/NotificationsOutlined";
 import PersonIcon from "@mui/icons-material/Person";
 import BarChartIcon from "@mui/icons-material/BarChart";
+import MenuIcon from "@mui/icons-material/Menu";
+import CloseIcon from "@mui/icons-material/Close";
 import logo from "../../assets/logo.png";
 import { useAuth } from "../../contexts/AuthContext";
 
@@ -43,7 +48,6 @@ const sidebarComponents = {
     { name: "Job Requests", icon: <AssignmentOutlinedIcon />, path: "/admin/requests" },
     { name: "Notifications", icon: <NotificationsOutlinedIcon />, path: "/admin/notifications" },
     { name: "Profile", icon: <PersonIcon />, path: "/admin/profile" },
-    // { name: "Statistics", icon: <BarChartIcon />, path: "/admin/statistics" },
   ],
 };
 
@@ -51,12 +55,22 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("md")); // Tablet and mobile
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const role = user?.role || "admin";
   const items = sidebarComponents[role] || [];
 
+  const handleDrawerToggle = () => {
+    setMobileOpen(!mobileOpen);
+  };
+
   const handleNavigation = (path) => {
     navigate(path);
+    if (isMobile) {
+      setMobileOpen(false); // Close drawer on mobile after navigation
+    }
   };
 
   const handleLogout = () => {
@@ -66,19 +80,26 @@ const Sidebar = () => {
 
   const drawerContent = (
     <Box display="flex" flexDirection="column" height="100%" p={2}>
-      <Box display="flex" alignItems="center" gap={1} mb={4} mt={2}>
-        <img
-          src={logo}
-          alt="Logo"
-          style={{
-            height: 35,
-            filter:
-              "brightness(0) saturate(100%) invert(37%) sepia(93%) saturate(1458%) hue-rotate(115deg) brightness(94%) contrast(102%)",
-          }}
-        />
-        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2DA94B" }}>
-          ACMS
-        </Typography>
+      <Box display="flex" alignItems="center" justifyContent="space-between" mb={4} mt={2}>
+        <Box display="flex" alignItems="center" gap={1}>
+          <img
+            src={logo}
+            alt="Logo"
+            style={{
+              height: 35,
+              filter:
+                "brightness(0) saturate(100%) invert(37%) sepia(93%) saturate(1458%) hue-rotate(115deg) brightness(94%) contrast(102%)",
+            }}
+          />
+          <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2DA94B" }}>
+            ACMS
+          </Typography>
+        </Box>
+        {isMobile && (
+          <IconButton onClick={handleDrawerToggle} sx={{ color: "white" }}>
+            <CloseIcon />
+          </IconButton>
+        )}
       </Box>
       <Box height={2} bgcolor="#2DA94B" borderRadius={1} mb={2} />
 
@@ -135,24 +156,67 @@ const Sidebar = () => {
 
   return (
     <Box>
-      <Drawer
-        variant="permanent"
-        sx={{
-          "& .MuiDrawer-paper": {
-            width: 250,
-            backgroundColor: "#2c2c2c",
+      {/* Mobile Menu Button */}
+      {isMobile && (
+        <IconButton
+          onClick={handleDrawerToggle}
+          sx={{
+            position: "fixed",
+            top: 16,
+            left: 16,
+            zIndex: 1300,
+            backgroundColor: "#2DA94B",
             color: "white",
-            borderRadius: 2,
-            mt: 2,
-            ml: 2,
-            mb: 2,
-            height: "calc(100vh - 32px)",
-            boxSizing: "border-box",
-          },
-        }}
-      >
-        {drawerContent}
-      </Drawer>
+            "&:hover": {
+              backgroundColor: "#258c3e",
+            },
+          }}
+        >
+          <MenuIcon />
+        </IconButton>
+      )}
+
+      {/* Temporary Drawer for Mobile/Tablet */}
+      {isMobile ? (
+        <Drawer
+          variant="temporary"
+          open={mobileOpen}
+          onClose={handleDrawerToggle}
+          ModalProps={{
+            keepMounted: true, // Better mobile performance
+          }}
+          sx={{
+            "& .MuiDrawer-paper": {
+              width: 250,
+              backgroundColor: "#2c2c2c",
+              color: "white",
+              boxSizing: "border-box",
+            },
+          }}
+        >
+          {drawerContent}
+        </Drawer>
+      ) : (
+        /* Permanent Drawer for Desktop */
+        <Drawer
+          variant="permanent"
+          sx={{
+            "& .MuiDrawer-paper": {
+              width: 250,
+              backgroundColor: "#2c2c2c",
+              color: "white",
+              borderRadius: 2,
+              mt: 2,
+              ml: 2,
+              mb: 2,
+              height: "calc(100vh - 32px)",
+              boxSizing: "border-box",
+            },
+          }}
+        >
+          {drawerContent}
+        </Drawer>
+      )}
     </Box>
   );
 };

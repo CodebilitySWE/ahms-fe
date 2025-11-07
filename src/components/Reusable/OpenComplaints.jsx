@@ -1,3 +1,7 @@
+// ============================================
+// 1. OpenComplaints.jsx - WITH DARK MODE
+// ============================================
+
 import React, { useState, useEffect } from 'react';
 import {
   Box,
@@ -13,6 +17,7 @@ import {
   CircularProgress
 } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { useTheme } from '@mui/material/styles';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -21,7 +26,6 @@ const fetchOpenComplaints = async (token, role) => {
     throw new Error("No auth token provided.");
   }
 
-  // Determine the correct endpoint based on role
   const endpoint = role === 'admin'
     ? `${API_BASE_URL}/api/admin/dashboard/complaints/open?limit=10&offset=0`
     : `${API_BASE_URL}/api/student/dashboard/complaints/open?limit=10&offset=0`;
@@ -43,6 +47,9 @@ const fetchOpenComplaints = async (token, role) => {
 };
 
 const OpenComplaints = ({ role = 'student', limit = 3 }) => {
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
+  
   const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -79,27 +86,36 @@ const OpenComplaints = ({ role = 'student', limit = 3 }) => {
   return (
     <Card 
       sx={{ 
-        boxShadow: 2, 
+        boxShadow: isDarkMode ? '0 4px 12px rgba(0, 0, 0, 0.5)' : 2,
         borderRadius: 2, 
         overflow: 'hidden', 
         height: '100%',
-        minHeight: 300
+        minHeight: 300,
+        bgcolor: isDarkMode ? '#1a1a1a' : '#ffffff',
       }}
     >
       <Box 
         sx={{ 
           p: 2, 
-          borderBottom: '1px solid #e0e0e0', 
+          borderBottom: `1px solid ${isDarkMode ? '#333' : '#e0e0e0'}`, 
           display: 'flex', 
           justifyContent: 'space-between', 
-          alignItems: 'center' 
+          alignItems: 'center',
+          bgcolor: isDarkMode ? '#1a1a1a' : '#ffffff',
         }}
       >
-        <Typography sx={{ fontWeight: 600, fontSize: 16, color: '#2c3e50' }}>
+        <Typography sx={{ 
+          fontWeight: 600, 
+          fontSize: 16, 
+          color: isDarkMode ? '#ffffff' : '#2c3e50' 
+        }}>
           Open Complaints
         </Typography>
         <IconButton size="small">
-          <MoreVertIcon sx={{ fontSize: 20 }} />
+          <MoreVertIcon sx={{ 
+            fontSize: 20, 
+            color: isDarkMode ? '#ffffff' : 'inherit' 
+          }} />
         </IconButton>
       </Box>
 
@@ -115,16 +131,19 @@ const OpenComplaints = ({ role = 'student', limit = 3 }) => {
           <CircularProgress size={40} sx={{ color: '#4caf50' }} />
         </Box>
       ) : (
-        <TableContainer>
+        <TableContainer sx={{ bgcolor: isDarkMode ? '#1a1a1a' : '#ffffff' }}>
           <Table size="small">
             <TableHead>
-              <TableRow sx={{ bgcolor: '#f5f5f5' }}>
+              <TableRow sx={{ 
+                bgcolor: isDarkMode ? '#252525' : '#f5f5f5' 
+              }}>
                 <TableCell 
                   sx={{ 
                     fontWeight: 600, 
-                    color: '#666', 
+                    color: isDarkMode ? '#b0b0b0' : '#666', 
                     fontSize: 11, 
-                    textTransform: 'uppercase' 
+                    textTransform: 'uppercase',
+                    borderBottom: `1px solid ${isDarkMode ? '#333' : 'rgba(224, 224, 224, 1)'}`
                   }}
                 >
                   {role === 'admin' ? 'COMPLAINANT' : 'CATEGORY'}
@@ -132,9 +151,10 @@ const OpenComplaints = ({ role = 'student', limit = 3 }) => {
                 <TableCell 
                   sx={{ 
                     fontWeight: 600, 
-                    color: '#666', 
+                    color: isDarkMode ? '#b0b0b0' : '#666', 
                     fontSize: 11, 
-                    textTransform: 'uppercase' 
+                    textTransform: 'uppercase',
+                    borderBottom: `1px solid ${isDarkMode ? '#333' : 'rgba(224, 224, 224, 1)'}`
                   }}
                 >
                   ROOM/NUMBER
@@ -142,9 +162,10 @@ const OpenComplaints = ({ role = 'student', limit = 3 }) => {
                 <TableCell 
                   sx={{ 
                     fontWeight: 600, 
-                    color: '#666', 
+                    color: isDarkMode ? '#b0b0b0' : '#666', 
                     fontSize: 11, 
-                    textTransform: 'uppercase' 
+                    textTransform: 'uppercase',
+                    borderBottom: `1px solid ${isDarkMode ? '#333' : 'rgba(224, 224, 224, 1)'}`
                   }}
                 >
                   PRIORITY
@@ -152,9 +173,10 @@ const OpenComplaints = ({ role = 'student', limit = 3 }) => {
                 <TableCell 
                   sx={{ 
                     fontWeight: 600, 
-                    color: '#666', 
+                    color: isDarkMode ? '#b0b0b0' : '#666', 
                     fontSize: 11, 
-                    textTransform: 'uppercase' 
+                    textTransform: 'uppercase',
+                    borderBottom: `1px solid ${isDarkMode ? '#333' : 'rgba(224, 224, 224, 1)'}`
                   }}
                 >
                   PRIORITY LEVEL
@@ -164,7 +186,15 @@ const OpenComplaints = ({ role = 'student', limit = 3 }) => {
             <TableBody>
               {complaints.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={4} align="center" sx={{ py: 4, color: '#999' }}>
+                  <TableCell 
+                    colSpan={4} 
+                    align="center" 
+                    sx={{ 
+                      py: 4, 
+                      color: isDarkMode ? '#666' : '#999',
+                      borderBottom: 'none'
+                    }}
+                  >
                     No open complaints
                   </TableCell>
                 </TableRow>
@@ -173,34 +203,48 @@ const OpenComplaints = ({ role = 'student', limit = 3 }) => {
                   <TableRow 
                     key={complaint.id} 
                     sx={{ 
-                      '&:hover': { bgcolor: '#f9f9f9' },
-                      cursor: 'pointer' 
+                      '&:hover': { 
+                        bgcolor: isDarkMode ? '#252525' : '#f9f9f9' 
+                      },
+                      cursor: 'pointer',
+                      bgcolor: isDarkMode ? '#1a1a1a' : '#ffffff',
                     }}
                   >
-                    <TableCell sx={{ fontSize: 13, color: '#2c3e50' }}>
+                    <TableCell sx={{ 
+                      fontSize: 13, 
+                      color: isDarkMode ? '#e0e0e0' : '#2c3e50',
+                      borderBottom: `1px solid ${isDarkMode ? '#333' : 'rgba(224, 224, 224, 1)'}`
+                    }}>
                       {role === 'admin' 
-                        ? (complaint.student_name || complaint.complainant || 'Unknown')
+                        ? (complaint.complainant_name || complaint.complainant || 'Unknown')
                         : (complaint.category_name || complaint.title || 'Unknown')
                       }
                     </TableCell>
-                    <TableCell sx={{ fontSize: 13, color: '#5a6c7d' }}>
+                    <TableCell sx={{ 
+                      fontSize: 13, 
+                      color: isDarkMode ? '#b0b0b0' : '#5a6c7d',
+                      borderBottom: `1px solid ${isDarkMode ? '#333' : 'rgba(224, 224, 224, 1)'}`
+                    }}>
                       {complaint.room_number || 'N/A'}
                     </TableCell>
                     <TableCell 
                       sx={{ 
                         fontSize: 13, 
                         color: getPriorityColor(complaint.priority), 
-                        fontWeight: 500 
+                        fontWeight: 500,
+                        borderBottom: `1px solid ${isDarkMode ? '#333' : 'rgba(224, 224, 224, 1)'}`
                       }}
                     >
                       {complaint.priority || 'N/A'}
                     </TableCell>
-                    <TableCell>
+                    <TableCell sx={{
+                      borderBottom: `1px solid ${isDarkMode ? '#333' : 'rgba(224, 224, 224, 1)'}`
+                    }}>
                       <Box
                         sx={{
                           width: '100%',
                           height: 6,
-                          bgcolor: '#e0e0e0',
+                          bgcolor: isDarkMode ? '#333' : '#e0e0e0',
                           borderRadius: 1,
                           overflow: 'hidden'
                         }}

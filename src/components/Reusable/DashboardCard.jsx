@@ -4,81 +4,60 @@ import {
   CardContent,
   Box,
   Typography,
-  // useTheme,
   Skeleton,
   Divider,
 } from '@mui/material';
-import { useThemeContext } from '../../contexts/ThemeContext';
+import { useTheme } from '@mui/material/styles';
 
-/**
- * Animated number counter component
- */
 const AnimatedCounter = ({ value, duration = 1500 }) => {
   const [count, setCount] = useState(0);
-  const [prevValue, setPrevValue] = useState(0);
 
   useEffect(() => {
-    if (value === prevValue) return;
+    let startValue = 0;
+    const endValue = value;
+    const startTime = Date.now();
     
-    setPrevValue(value);
-    const increment = (value - prevValue) / (duration / 16);
-    let current = prevValue;
-    
-    const timer = setInterval(() => {
-      current += increment;
-      if ((increment > 0 && current >= value) || (increment < 0 && current <= value)) {
-        setCount(value);
-        clearInterval(timer);
-      } else {
-        setCount(Math.round(current));
+    const animate = () => {
+      const currentTime = Date.now();
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+      const currentValue = Math.round(startValue + (endValue - startValue) * easeOutQuart);
+      
+      setCount(currentValue);
+      
+      if (progress < 1) {
+        requestAnimationFrame(animate);
       }
-    }, 16);
+    };
     
-    return () => clearInterval(timer);
-  }, [value, duration, prevValue]);
+    requestAnimationFrame(animate);
+  }, [value, duration]);
 
   return <>{count}</>;
 };
 
-/**
- * Dashboard Card Component matching the ComplexStatisticsCard layout
- */
 const DashboardCard = ({
-  // Content props
   icon,
   title,
   value,
-  
-  // Icon styling
   iconBackground = '#e5e5e5',
   iconColor = '#666',
-  
-  // Trend indicator
   trend = null,
-  
-  // Card behavior
   isLoading = false,
   animateValue = true,
-  
-  // Optional props
   subtitle = null,
-  
-  // Custom styling
   sx = {},
-  
-  // Click handler
   onClick = null,
 }) => {
-  // const theme = useTheme();
-  const { mode } = useThemeContext();
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   const [isHovered, setIsHovered] = useState(false);
 
-  // Card background color based on theme
-  const cardBgColor = mode === 'dark' ? '#2d2d2d' : '#ffffff';
-  
-  // Text colors based on theme
-  const titleColor = mode === 'dark' ? 'rgba(255, 255, 255, 0.7)' : '#6b7280';
-  const valueColor = mode === 'dark' ? '#ffffff' : '#374151';
+  const cardBgColor = isDarkMode ? '#1a1a1a' : '#ffffff';
+  const titleColor = isDarkMode ? '#b0b0b0' : '#6b7280';
+  const valueColor = isDarkMode ? '#ffffff' : '#374151';
   const trendTextColor = '#4CAF50';
 
   return (
@@ -90,14 +69,14 @@ const DashboardCard = ({
         backgroundColor: cardBgColor,
         cursor: onClick ? 'pointer' : 'default',
         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        border: 'none',
+        border: isDarkMode ? '1px solid #333' : 'none',
         borderRadius: 3,
         overflow: 'visible',
         position: 'relative',
         transform: isHovered ? 'translateY(-2px)' : 'translateY(0)',
         boxShadow: isHovered 
-          ? '0 6px 20px rgba(0, 0, 0, 0.15)' 
-          : '0 2px 10px rgba(0, 0, 0, 0.08)',
+          ? (isDarkMode ? '0 6px 20px rgba(0, 0, 0, 0.7)' : '0 6px 20px rgba(0, 0, 0, 0.15)')
+          : (isDarkMode ? '0 2px 10px rgba(0, 0, 0, 0.5)' : '0 2px 10px rgba(0, 0, 0, 0.08)'),
         width: 220,
         height: 120,
         minWidth: 200,
@@ -110,7 +89,6 @@ const DashboardCard = ({
     >
       <CardContent sx={{ p: 0, height: '100%' }}>
         {isLoading ? (
-          // Loading state
           <Box p={2}>
             <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
               <Skeleton variant="rectangular" width={48} height={48} sx={{ borderRadius: 2 }} />
@@ -126,7 +104,6 @@ const DashboardCard = ({
           </Box>
         ) : (
           <Box display="flex" flexDirection="row" alignItems="flex-start" height="100%" px={2} pt={2} pb={1} position="relative">
-            {/* Floating icon container */}
             <Box
               sx={{
                 width: 48,
@@ -138,8 +115,8 @@ const DashboardCard = ({
                 justifyContent: 'center',
                 boxShadow: `0 2px 8px ${iconBackground}40`,
                 position: 'absolute',
-                top: -24, // Half of icon height above the card
-                left: 16, // Padding from the left edge
+                top: -24,
+                left: 16,
                 zIndex: 2,
               }}
             >
@@ -150,7 +127,6 @@ const DashboardCard = ({
                 }
               })}
             </Box>
-            {/* Right aligned title and value */}
             <Box flex={1} textAlign="right" display="flex" flexDirection="column" justifyContent="center" height="100%" ml={7}>
               <Typography
                 variant="body2"
