@@ -19,6 +19,9 @@ If you are developing a production application, we recommend using TypeScript an
 4. run the application with `yarn dev` or `yarn run`
 
 ## Things needed in .env
-- `BASE_API_URL=`
+-`VITE_API_BASE_URL`=https://ahms-be-obre.onrender.com
+
+# The final project's website
+https://ahcms1.netlify.app/
 
 ## Good luck Team Codebility -------> JOE
