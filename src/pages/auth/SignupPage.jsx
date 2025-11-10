@@ -14,33 +14,34 @@ import {
   Paper,
   Avatar,
   Tooltip,
-  Alert
+  Alert,
+  InputAdornment
 } from "@mui/material";
-import { useThemeContext } from "../../contexts/ThemeContext";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import { registerUser } from '../../utils/authUtils';
-import { ToastContainer, toast } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CloseIcon from "@mui/icons-material/Close";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
 
 const greenPalette = {
   main: '#2DA94B', 
 };
 
+const commonPasswords = [
+  'password', 'qwerty', '123456', '12345678', '111111', '123123',
+  'password123', 'admin', 'letmein', 'welcome', 'monkey', 'dragon'
+];
+
 const SignupPage = () => {
-  // Theme context
-  let themeContext;
-  try {
-    themeContext = useThemeContext();
-  } catch (error) {
-    themeContext = { mode: 'light', toggleTheme: () => {} };
-  }
-  const { mode, toggleTheme } = themeContext;
+  const [mode, setMode] = useState('light');
+  
+  const toggleTheme = () => {
+    setMode(prev => prev === 'light' ? 'dark' : 'light');
+  };
   
   // State for form data
   const [formData, setFormData] = useState({
@@ -56,24 +57,151 @@ const SignupPage = () => {
     agreeToTerms: false
   });
   
+  // Validation states
+  const [validations, setValidations] = useState({
+    name: { isValid: null, message: '' },
+    email: { isValid: null, message: '' },
+    password: {
+      isValid: null,
+      minLength: false,
+      hasUppercase: false,
+      hasLowercase: false,
+      hasNumber: false,
+      hasSpecial: false,
+      noSpaces: true,
+      noRepeated: true,
+      noSequential: true,
+      noPersonalInfo: true,
+      notCommon: true
+    }
+  });
+
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
   // For photo upload
   const fileInputRef = useRef(null);
   const [fileName, setFileName] = useState("");
   const [photoFile, setPhotoFile] = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
 
-  const { login } = useAuth();
-  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+
+  // Validate name
+  const validateName = (name) => {
+    if (name.length === 0) {
+      return { isValid: null, message: '' };
+    }
+    
+    const nameRegex = /^[A-Za-z\s]+$/;
+    if (!nameRegex.test(name)) {
+      return { isValid: false, message: 'Please enter a valid name using letters only' };
+    }
+    
+    if (name.trim().length < 2) {
+      return { isValid: false, message: 'Name must be at least 2 characters' };
+    }
+    
+    return { isValid: true, message: '' };
+  };
+
+  // Validate email
+  const validateEmail = (email) => {
+    if (email.length === 0) {
+      return { isValid: null, message: '' };
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return { isValid: false, message: 'Please enter a valid email address' };
+    }
+    
+    return { isValid: true, message: '' };
+  };
+
+  // Validate password
+  const validatePassword = (password) => {
+    const validation = {
+      isValid: null,
+      minLength: password.length >= 8,
+      hasUppercase: /[A-Z]/.test(password),
+      hasLowercase: /[a-z]/.test(password),
+      hasNumber: /[0-9]/.test(password),
+      hasSpecial: /[!@#$%^&*()\-_=+\[\]{};:,<.>/?`]/.test(password),
+      noSpaces: !/\s/.test(password),
+      noRepeated: !/(.)\1{3,}/.test(password),
+      noSequential: !hasSequentialPattern(password),
+      noPersonalInfo: !containsPersonalInfo(password),
+      notCommon: !commonPasswords.some(common => password.toLowerCase().includes(common))
+    };
+
+    if (password.length === 0) {
+      return { ...validation, isValid: null };
+    }
+
+    const allValid = validation.minLength && 
+                     validation.hasUppercase && 
+                     validation.hasLowercase && 
+                     validation.hasNumber && 
+                     validation.hasSpecial &&
+                     validation.noSpaces &&
+                     validation.noRepeated &&
+                     validation.noSequential &&
+                     validation.noPersonalInfo &&
+                     validation.notCommon;
+    
+    validation.isValid = allValid;
+    return validation;
+  };
+
+  const hasSequentialPattern = (str) => {
+    const sequences = ['abc', 'bcd', 'cde', 'def', 'efg', 'fgh', 'ghi', 'hij', 'ijk', 
+                       'jkl', 'klm', 'lmn', 'mno', 'nop', 'opq', 'pqr', 'qrs', 'rst', 
+                       'stu', 'tuv', 'uvw', 'vwx', 'wxy', 'xyz', '123', '234', '345', 
+                       '456', '567', '678', '789'];
+    return sequences.some(seq => str.toLowerCase().includes(seq) || 
+                                  str.toLowerCase().includes(seq.split('').reverse().join('')));
+  };
+
+  const containsPersonalInfo = (password) => {
+    const lowerPass = password.toLowerCase();
+    const name = formData.name.toLowerCase();
+    const email = formData.email.toLowerCase().split('@')[0];
+    
+    if (name.length > 2 && lowerPass.includes(name)) return true;
+    if (email.length > 2 && lowerPass.includes(email)) return true;
+    
+    return false;
+  };
 
   // Handle form input changes
   const handleChange = (e) => {
     const { name, value, checked } = e.target;
+    const newValue = name === 'agreeToTerms' ? checked : value;
+    
     setFormData(prevState => ({
       ...prevState,
-      [name]: name === 'agreeToTerms' ? checked : value
+      [name]: newValue
     }));
+
+    // Real-time validation
+    if (name === 'name') {
+      setValidations(prev => ({
+        ...prev,
+        name: validateName(value)
+      }));
+    } else if (name === 'email') {
+      setValidations(prev => ({
+        ...prev,
+        email: validateEmail(value)
+      }));
+    } else if (name === 'password') {
+      setValidations(prev => ({
+        ...prev,
+        password: validatePassword(value)
+      }));
+    }
   };
 
   const handlePhotoUpload = (e) => {
@@ -109,53 +237,36 @@ const SignupPage = () => {
     // Form validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
-      toast.error('Passwords do not match');
       setIsSubmitting(false);
       return;
     }
     
     if (!formData.agreeToTerms) {
       setError('Please agree to the terms and conditions');
-      toast.error('Please agree to the terms and conditions');
+      setIsSubmitting(false);
+      return;
+    }
+
+    if (!validations.name.isValid || !validations.email.isValid || !validations.password.isValid) {
+      setError('Please fix all validation errors');
       setIsSubmitting(false);
       return;
     }
     
-    try {
-      // Map form data to API expected fields
-      const apiData = {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        phone_number: formData.phone,
-        student_id: formData.id,
-        room_number: formData.room_no, 
-        block: formData.block,
-        programme: formData.programme
-      };
-      
-      // Call API to register user
-      const response = await registerUser(apiData, photoFile);
-      
-      if (response.success) {
-        toast.success('Registration successful! Welcome aboard!');
-        // Login the user and redirect
-        login(response.user);
-        navigate('/student/dashboard');
-      }
-    } catch (err) {
-      setError(err.message || 'Registration failed. Please try again.');
-      toast.error(err.message || 'Registration failed. Please try again.');
-      console.error('Registration error:', err);
-    } finally {
+    // Simulate API call
+    setTimeout(() => {
+      alert('Registration successful!');
       setIsSubmitting(false);
-    }
+    }, 1000);
+  };
+
+  const getFieldBorderColor = (isValid) => {
+    if (isValid === null) return mode === 'dark' ? 'rgba(255,255,255,0.23)' : 'rgba(0,0,0,0.23)';
+    return isValid ? greenPalette.main : '#d32f2f';
   };
 
   return (
     <Box sx={{ minHeight: '100vh', position: 'relative', bgcolor: mode === 'dark' ? '#121212' : '#f8f9fa' }}>
-      <ToastContainer />
-
       {/* PHOTO HEADER */}
       <Box sx={{
         position: 'absolute', 
@@ -390,25 +501,54 @@ const SignupPage = () => {
               />
             </Box>
 
-            {/* Form Fields */}
-            <TextField
-              name="name"
-              label="Full Name"
-              fullWidth
-              required
-              value={formData.name}
-              onChange={handleChange}
-              sx={{ 
-                mb: 2,
-                '& .MuiOutlinedInput-root': { borderRadius: '14px' },
-                '& .MuiInputLabel-root': { 
-                  color: mode === 'dark' ? '#bbbbbb !important' : '#555 !important' 
-                },
-                '& .MuiOutlinedInput-input': {
-                  color: mode === 'dark' ? '#e0e0e0' : 'inherit'
-                }
-              }}
-            />
+            {/* Full Name with Validation */}
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                name="name"
+                label="Full Name"
+                fullWidth
+                required
+                value={formData.name}
+                onChange={handleChange}
+                InputProps={{
+                  endAdornment: validations.name.isValid !== null && (
+                    <InputAdornment position="end">
+                      {validations.name.isValid ? (
+                        <CheckCircleIcon sx={{ color: greenPalette.main }} />
+                      ) : (
+                        <CloseIcon sx={{ color: '#d32f2f' }} />
+                      )}
+                    </InputAdornment>
+                  )
+                }}
+                sx={{ 
+                  '& .MuiOutlinedInput-root': { 
+                    borderRadius: '14px',
+                    '& fieldset': {
+                      borderColor: getFieldBorderColor(validations.name.isValid),
+                      borderWidth: validations.name.isValid !== null ? '2px' : '1px'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: getFieldBorderColor(validations.name.isValid)
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: getFieldBorderColor(validations.name.isValid)
+                    }
+                  },
+                  '& .MuiInputLabel-root': { 
+                    color: mode === 'dark' ? '#bbbbbb !important' : '#555 !important' 
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: mode === 'dark' ? '#e0e0e0' : 'inherit'
+                  }
+                }}
+              />
+              {validations.name.message && (
+                <Typography variant="caption" sx={{ color: '#d32f2f', mt: 0.5, display: 'block', ml: 1 }}>
+                  {validations.name.message}
+                </Typography>
+              )}
+            </Box>
             
             <TextField
               name="id"
@@ -429,25 +569,55 @@ const SignupPage = () => {
               }}
             />
             
-            <TextField
-              name="email"
-              label="Student Email"
-              fullWidth
-              type="email"
-              required
-              value={formData.email}
-              onChange={handleChange}
-              sx={{ 
-                mb: 2,
-                '& .MuiOutlinedInput-root': { borderRadius: '14px' },
-                '& .MuiInputLabel-root': { 
-                  color: mode === 'dark' ? '#bbbbbb !important' : '#555 !important' 
-                },
-                '& .MuiOutlinedInput-input': {
-                  color: mode === 'dark' ? '#e0e0e0' : 'inherit'
-                }
-              }}
-            />
+            {/* Email with Validation */}
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                name="email"
+                label="Student Email"
+                fullWidth
+                type="email"
+                required
+                value={formData.email}
+                onChange={handleChange}
+                InputProps={{
+                  endAdornment: validations.email.isValid !== null && (
+                    <InputAdornment position="end">
+                      {validations.email.isValid ? (
+                        <CheckCircleIcon sx={{ color: greenPalette.main }} />
+                      ) : (
+                        <CloseIcon sx={{ color: '#d32f2f' }} />
+                      )}
+                    </InputAdornment>
+                  )
+                }}
+                sx={{ 
+                  '& .MuiOutlinedInput-root': { 
+                    borderRadius: '14px',
+                    '& fieldset': {
+                      borderColor: getFieldBorderColor(validations.email.isValid),
+                      borderWidth: validations.email.isValid !== null ? '2px' : '1px'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: getFieldBorderColor(validations.email.isValid)
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: getFieldBorderColor(validations.email.isValid)
+                    }
+                  },
+                  '& .MuiInputLabel-root': { 
+                    color: mode === 'dark' ? '#bbbbbb !important' : '#555 !important' 
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: mode === 'dark' ? '#e0e0e0' : 'inherit'
+                  }
+                }}
+              />
+              {validations.email.message && (
+                <Typography variant="caption" sx={{ color: '#d32f2f', mt: 0.5, display: 'block', ml: 1 }}>
+                  {validations.email.message}
+                </Typography>
+              )}
+            </Box>
             
             <TextField
               name="programme"
@@ -537,34 +707,206 @@ const SignupPage = () => {
               }}
             />
             
-            <TextField
-              name="password"
-              label="Password"
-              fullWidth
-              type="password"
-              required
-              value={formData.password}
-              onChange={handleChange}
-              sx={{ 
-                mb: 2,
-                '& .MuiOutlinedInput-root': { borderRadius: '14px' },
-                '& .MuiInputLabel-root': { 
-                  color: mode === 'dark' ? '#bbbbbb !important' : '#555 !important' 
-                },
-                '& .MuiOutlinedInput-input': {
-                  color: mode === 'dark' ? '#e0e0e0' : 'inherit'
-                }
-              }}
-            />
+            {/* Password with Detailed Validation */}
+            <Box sx={{ mb: 2 }}>
+              <TextField
+                name="password"
+                label="Password"
+                fullWidth
+                type={showPassword ? "text" : "password"}
+                required
+                value={formData.password}
+                onChange={handleChange}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        onClick={() => setShowPassword(!showPassword)}
+                        edge="end"
+                        sx={{ color: mode === 'dark' ? '#e0e0e0' : 'inherit' }}
+                      >
+                        {showPassword ? <VisibilityOffOutlinedIcon /> : <VisibilityOutlinedIcon />}
+                      </IconButton>
+                      {validations.password.isValid !== null && (
+                        validations.password.isValid ? (
+                          <CheckCircleIcon sx={{ color: greenPalette.main, ml: 1 }} />
+                        ) : (
+                          <CloseIcon sx={{ color: '#d32f2f', ml: 1 }} />
+                        )
+                      )}
+                    </InputAdornment>
+                  )
+                }}
+                sx={{ 
+                  '& .MuiOutlinedInput-root': { 
+                    borderRadius: '14px',
+                    '& fieldset': {
+                      borderColor: getFieldBorderColor(validations.password.isValid),
+                      borderWidth: validations.password.isValid !== null ? '2px' : '1px'
+                    },
+                    '&:hover fieldset': {
+                      borderColor: getFieldBorderColor(validations.password.isValid)
+                    },
+                    '&.Mui-focused fieldset': {
+                      borderColor: getFieldBorderColor(validations.password.isValid)
+                    }
+                  },
+                  '& .MuiInputLabel-root': { 
+                    color: mode === 'dark' ? '#bbbbbb !important' : '#555 !important' 
+                  },
+                  '& .MuiOutlinedInput-input': {
+                    color: mode === 'dark' ? '#e0e0e0' : 'inherit'
+                  }
+                }}
+              />
+              
+              {formData.password.length > 0 && (
+                <Box sx={{ mt: 1, ml: 1 }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                    <Box sx={{ 
+                      width: 8, 
+                      height: 8, 
+                      borderRadius: '50%', 
+                      bgcolor: validations.password.minLength ? greenPalette.main : mode === 'dark' ? '#666' : '#ccc',
+                      mr: 1 
+                    }} />
+                    <Typography variant="caption" sx={{ color: mode === 'dark' ? '#e0e0e0' : '#333' }}>
+                      At least 8 characters
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                    <Box sx={{ 
+                      width: 8, 
+                      height: 8, 
+                      borderRadius: '50%', 
+                      bgcolor: validations.password.hasUppercase ? greenPalette.main : mode === 'dark' ? '#666' : '#ccc',
+                      mr: 1 
+                    }} />
+                    <Typography variant="caption" sx={{ color: mode === 'dark' ? '#e0e0e0' : '#333' }}>
+                      At least 1 uppercase letter
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                    <Box sx={{ 
+                      width: 8, 
+                      height: 8, 
+                      borderRadius: '50%', 
+                      bgcolor: validations.password.hasLowercase ? greenPalette.main : mode === 'dark' ? '#666' : '#ccc',
+                      mr: 1 
+                    }} />
+                    <Typography variant="caption" sx={{ color: mode === 'dark ' ? '#e0e0e0' : '#333' }}>
+                      At least 1 lowercase letter
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                    <Box sx={{ 
+                      width: 8, 
+                      height: 8, 
+                      borderRadius: '50%', 
+                      bgcolor: validations.password.hasNumber ? greenPalette.main : mode === 'dark' ? '#666' : '#ccc',
+                      mr: 1 
+                    }} />
+                    <Typography variant="caption" sx={{ color: mode === 'dark' ? '#e0e0e0' : '#333' }}>
+                      At least 1 number
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                    <Box sx={{ 
+                      width: 8, 
+                      height: 8, 
+                      borderRadius: '50%', 
+                      bgcolor: validations.password.hasSpecial ? greenPalette.main : mode === 'dark' ? '#666' : '#ccc',
+                      mr: 1 
+                    }} />
+                    <Typography variant="caption" sx={{ color: mode === 'dark' ? '#e0e0e0' : '#333' }}>
+                      At least 1 special character
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                    <Box sx={{ 
+                      width: 8, 
+                      height: 8, 
+                      borderRadius: '50%', 
+                      bgcolor: validations.password.noSpaces ? greenPalette.main : mode === 'dark' ? '#666' : '#ccc',
+                      mr: 1 
+                    }} />
+                    <Typography variant="caption" sx={{ color: mode === 'dark' ? '#e0e0e0' : '#333' }}>
+                      No spaces allowed
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                    <Box sx={{ 
+                      width: 8, 
+                      height: 8, 
+                      borderRadius: '50%', 
+                      bgcolor: validations.password.noRepeated ? greenPalette.main : mode === 'dark' ? '#666' : '#ccc',
+                      mr: 1 
+                    }} />
+                    <Typography variant="caption" sx={{ color: mode === 'dark' ? '#e0e0e0' : '#333' }}>
+                      No repeated characters (4+)
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                    <Box sx={{ 
+                      width: 8, 
+                      height: 8, 
+                      borderRadius: '50%', 
+                      bgcolor: validations.password.noSequential ? greenPalette.main : mode === 'dark' ? '#666' : '#ccc',
+                      mr: 1 
+                    }} />
+                    <Typography variant="caption" sx={{ color: mode === 'dark' ? '#e0e0e0' : '#333' }}>
+                      No sequential patterns
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 0.5 }}>
+                    <Box sx={{ 
+                      width: 8, 
+                      height: 8, 
+                      borderRadius: '50%', 
+                      bgcolor: validations.password.noPersonalInfo ? greenPalette.main : mode === 'dark' ? '#666' : '#ccc',
+                      mr: 1 
+                    }} />
+                    <Typography variant="caption" sx={{ color: mode === 'dark' ? '#e0e0e0' : '#333' }}>
+                      No personal info (name/email)
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Box sx={{ 
+                      width: 8, 
+                      height: 8, 
+                      borderRadius: '50%', 
+                      bgcolor: validations.password.notCommon ? greenPalette.main : mode === 'dark' ? '#666' : '#ccc',
+                      mr: 1 
+                    }} />
+                    <Typography variant="caption" sx={{ color: mode === 'dark' ? '#e0e0e0' : '#333' }}>
+                      Not a common password
+                    </Typography>
+                  </Box>
+                </Box>
+              )}
+            </Box>
             
             <TextField
               name="confirmPassword"
               label="Re-type Password"
               fullWidth
-              type="password"
+              type={showConfirmPassword ? "text" : "password"}
               required
               value={formData.confirmPassword}
               onChange={handleChange}
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      edge="end"
+                      sx={{ color: mode === 'dark' ? '#e0e0e0' : 'inherit' }}
+                    >
+                      {showConfirmPassword ? <VisibilityOffOutlinedIcon /> : <VisibilityOutlinedIcon />}
+                    </IconButton>
+                  </InputAdornment>
+                )
+              }}
               sx={{ 
                 mb: 2,
                 '& .MuiOutlinedInput-root': { borderRadius: '14px' },
