@@ -30,6 +30,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { registerUser } from '../../utils/authUtils';
 import { ToastContainer, toast } from 'react-toastify';
+import { useThemeContext } from '../../contexts/ThemeContext';
 import 'react-toastify/dist/ReactToastify.css';
 
 const greenPalette = {
@@ -42,11 +43,7 @@ const commonPasswords = [
 ];
 
 const SignupPage = () => {
-  const [mode, setMode] = useState('light');
-  
-  const toggleTheme = () => {
-    setMode(prev => prev === 'light' ? 'dark' : 'light');
-  };
+  const { mode = 'light', toggleTheme } = useThemeContext() || {};
   
   // State for form data
   const [formData, setFormData] = useState({
