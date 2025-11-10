@@ -26,6 +26,11 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CloseIcon from "@mui/icons-material/Close";
 import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
 import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import { registerUser } from '../../utils/authUtils';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const greenPalette = {
   main: '#2DA94B', 
@@ -88,6 +93,8 @@ const SignupPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
+  const navigate = useNavigate();
+  const { login } = useAuth();
   // Validate name
   const validateName = (name) => {
     if (name.length === 0) {
@@ -230,35 +237,64 @@ const SignupPage = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setIsSubmitting(true);
-    
-    // Form validation
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      setIsSubmitting(false);
-      return;
-    }
-    
-    if (!formData.agreeToTerms) {
-      setError('Please agree to the terms and conditions');
-      setIsSubmitting(false);
-      return;
-    }
+  e.preventDefault();
+  setError('');
+  setIsSubmitting(true);
+  
+  // Form validation
+  if (formData.password !== formData.confirmPassword) {
+    setError('Passwords do not match');
+    toast.error('Passwords do not match');
+    setIsSubmitting(false);
+    return;
+  }
+  
+  if (!formData.agreeToTerms) {
+    setError('Please agree to the terms and conditions');
+    toast.error('Please agree to the terms and conditions');
+    setIsSubmitting(false);
+    return;
+  }
 
-    if (!validations.name.isValid || !validations.email.isValid || !validations.password.isValid) {
-      setError('Please fix all validation errors');
-      setIsSubmitting(false);
-      return;
-    }
+  if (!validations.name.isValid || !validations.email.isValid || !validations.password.isValid) {
+    setError('Please fix all validation errors');
+    toast.error('Please fix all validation errors');
+    setIsSubmitting(false);
+    return;
+  }
+  
+  try {
+    // Map form data to API expected fields
+    const apiData = {
+      name: formData.name,
+      email: formData.email,
+      password: formData.password,
+      phone_number: formData.phone,
+      student_id: formData.id,
+      room_number: formData.room_no,
+      block: formData.block,
+      programme: formData.programme
+    };
     
-    // Simulate API call
-    setTimeout(() => {
-      alert('Registration successful!');
-      setIsSubmitting(false);
-    }, 1000);
-  };
+    // Call API to register user
+    const response = await registerUser(apiData, photoFile);
+    
+    if (response.success) {
+      toast.success('Registration successful! Redirecting to login...');
+      
+      // Wait 2 seconds before redirecting to login
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+    }
+  } catch (err) {
+    setError(err.message || 'Registration failed. Please try again.');
+    toast.error(err.message || 'Registration failed. Please try again.');
+    console.error('Registration error:', err);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   const getFieldBorderColor = (isValid) => {
     if (isValid === null) return mode === 'dark' ? 'rgba(255,255,255,0.23)' : 'rgba(0,0,0,0.23)';
@@ -267,6 +303,18 @@ const SignupPage = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', position: 'relative', bgcolor: mode === 'dark' ? '#121212' : '#f8f9fa' }}>
+    <ToastContainer 
+      position="top-right"
+      autoClose={3000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover
+      theme={mode === 'dark' ? 'dark' : 'light'}
+    />
       {/* PHOTO HEADER */}
       <Box sx={{
         position: 'absolute', 
